@@ -39,7 +39,7 @@ Vector2 vec2(float x, float y) {
     return (Vector2){ .x = x, .y = y };
 }
 
-void update_camera(Camera2D *camera, Vector2 player_position, float delta) {
+void update_camera(Camera2D *camera, Vector2 player_position, Vector2 extents, float delta) {
     static float min_speed = 30;
     static float min_effect_length = 10;
     static float fraction_speed = 2.f;
@@ -52,6 +52,14 @@ void update_camera(Camera2D *camera, Vector2 player_position, float delta) {
         float speed = fmaxf(fraction_speed * length, min_speed);
         camera->target = Vector2Add(camera->target, Vector2Scale(diff, speed * delta / length));
     }
+
+    Vector2 min = GetWorldToScreen2D(vec2(0, 0), *camera);
+    Vector2 max = GetWorldToScreen2D(extents, *camera);
+
+    if (max.x < WINDOW_WIDTH) camera->offset.x = WINDOW_WIDTH - (max.x - WINDOW_WIDTH / 2);
+    if (max.y < WINDOW_HEIGHT) camera->offset.y = WINDOW_HEIGHT - (max.y - WINDOW_HEIGHT / 2);
+    if (min.x > 0) camera->offset.x = WINDOW_WIDTH / 2 - min.x;
+    if (min.y > 0) camera->offset.y = WINDOW_HEIGHT / 2 - min.y;
 }
 
 void update_bullets(Vec_Bullet *bullets, float delta) {
@@ -140,7 +148,7 @@ int main(int argc, const char **argv) {
             vec_append(&bullets, bullet);
         }
 
-        update_camera(&player_camera, player_position, delta);
+        update_camera(&player_camera, player_position, vec2(WINDOW_WIDTH * 2, WINDOW_HEIGHT * 2), delta);
         update_bullets(&bullets, delta);
 
         // Draw ===============================================================
