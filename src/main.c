@@ -19,8 +19,7 @@ void update_camera(Camera2D *camera, Vector2 player_position, float delta) {
     Vector2 diff = Vector2Subtract(player_position, camera->target);
     float length = Vector2Length(diff);
 
-    if (length > min_effect_length)
-    {
+    if (length > min_effect_length) {
         float speed = fmaxf(fraction_speed * length, min_speed);
         camera->target = Vector2Add(camera->target, Vector2Scale(diff, speed * delta / length));
     }
@@ -46,7 +45,11 @@ int main(int argc, const char **argv) {
         if (IsKeyDown(KEY_A)) player_velocity.x -= 1.f;
         if (IsKeyDown(KEY_S)) player_velocity.y += 1.f;
         if (IsKeyDown(KEY_D)) player_velocity.x += 1.f;
-        player_position = Vector2Add(player_position, Vector2Scale(player_velocity, 100 * delta));
+        player_velocity = Vector2Normalize(player_velocity);
+        player_velocity = Vector2Scale(player_velocity, 300 * delta);
+
+        player_position = Vector2Add(player_position, player_velocity);
+
         update_camera(&player_camera, player_position, delta);
 
         // Draw ===============================================================
@@ -57,6 +60,7 @@ int main(int argc, const char **argv) {
                 DrawLineV(Vector2Add(player_position, vec2(0.f, -25.f)), mouse_position, RED);
 
                 DrawRectangle(player_position.x - 12.5f, player_position.y - 50, 25, 100, BLACK);
+                DrawRectangle(WINDOW_WIDTH / 2 - 100, WINDOW_HEIGHT / 2 + 55, 200, 200, GRAY);
             EndMode2D();
         EndDrawing();
     }
