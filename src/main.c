@@ -39,6 +39,76 @@ Vector2 vec2(float x, float y) {
     return (Vector2){ .x = x, .y = y };
 }
 
+Vector2 vec2f3(Vector3 v3) {
+    return (Vector2){
+        .x = v3.x,
+        .y = v3.y
+    };
+}
+
+Vector3 vec3(float x, float y, float z) {
+    return (Vector3){ .x = x, .y = y, .z = z };
+}
+
+Vector3 vec3f2(Vector2 v2) {
+    return (Vector3){
+        .x = v2.x,
+        .y = v2.y,
+        .z = 0.f
+    };
+}
+
+typedef struct {
+    Vector2 top;
+    Vector2 bottom;
+} Stair;
+
+#define vec2_print(str, v2) snprintf(str, sizeof(str), "(%f, %f)", (v2).x, (v2).y)
+
+float lerp(float a, float b, float t) {
+    return (1 - t) * a + t * b;
+}
+
+float inv_lerp(float x, float a, float b) {
+    return (x - a) / (b - a);
+}
+
+RayCollision get_ray_collision_stairs(Ray ray, Stair stairs) {
+    #ifdef DEBUG
+        if (ray.direction.x != 0.f && ray.direction.z != 0.f) {
+            TraceLog(LOG_ERROR, "Invalid ray! direction not aligned to Y axis.");
+            abort();
+        }
+    #endif
+
+    Vector2 ray_position = vec2f3(ray.position);
+
+    float stairs_left, stairs_right;
+    if (stairs.top.x < stairs.bottom.x) {
+        stairs_left = stairs.top.x;
+        stairs_right = stairs.bottom.x;
+    } else {
+        stairs_left = stairs.bottom.x;
+        stairs_right = stairs.top.x;
+    }
+
+    if (ray_position.x < stairs_left || ray_position.x > stairs_right) {
+        // No collision
+        return (RayCollision){0};
+    }
+
+    float t = inv_lerp(ray_position.x, stairs_left, stairs_right);
+    Vector2 point = vec2(ray_position.x, lerp(stairs.top.y, stairs.bottom.y, t));
+
+    float distance = Vector2Distance(ray_position, point);
+
+    return (RayCollision){
+        .hit = true,
+        .distance = distance,
+        .point = vec3f2(point)
+    };
+}
+
 void update_camera(Camera2D *camera, Vector2 player_position, Vector2 extents, float delta) {
     static float min_speed = 30;
     static float min_effect_length = 10;
@@ -102,10 +172,34 @@ void draw_bullets(Vec_Bullet bullets) {
     }
 }
 
+void draw_stairs(Stair stairs, Color color) {
+    Vector2 p1 = stairs.top;
+    Vector2 p2;
+    Vector2 p3;
+
+    if (stairs.bottom.x < p1.x) {
+        //     /|
+        //   /  |
+        // /____|
+
+        p2 = stairs.bottom;
+        p3 = vec2(p1.x, p2.y);
+    } else {
+        // |\ 
+        // | \ 
+        // |__\ 
+
+        p2 = vec2(p1.x, stairs.bottom.y);
+        p3 = stairs.bottom;
+    }
+
+    DrawTriangle(p1, p2, p3, color);
+}
+
 int main(int argc, const char **argv) {
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "The Game");
 
-    Vector2 player_position = vec2(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
+    Vector2 player_position = vec2(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 - PLAYER_HEIGHT / 2);
 
     Camera2D player_camera;
     player_camera.target = player_position;
@@ -116,6 +210,16 @@ int main(int argc, const char **argv) {
     HideCursor();
 
     Vec_Bullet bullets = {0};
+
+    BoundingBox ground = (BoundingBox){
+        .min = vec3(0.f, WINDOW_HEIGHT / 2, 0.f),
+        .max = vec3(1000, WINDOW_HEIGHT / 2 + 300, 0.f),
+    };
+
+    Stair stairs = (Stair){
+        .top = vec2(1000, WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2),
+        .bottom = vec2(1400, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300)
+    };
 
     while (!WindowShouldClose()) {
         float delta = GetFrameTime();
@@ -132,6 +236,35 @@ int main(int argc, const char **argv) {
         player_velocity *= PLAYER_SPEED * delta;
 
         player_position.x += player_velocity;
+
+        Ray player_ray = (Ray){
+            .position = vec3f2(player_position),
+            .direction = vec3(0.f, 1.f, 0.f)
+        };
+
+        RayCollision collision = GetRayCollisionBox(player_ray, ground);
+
+        Color ray_color = RED;
+        if (collision.hit) {
+            ray_color = GREEN;
+
+            // if (collision.distance <= 1.5f) {
+                player_position.y = collision.point.y;
+            // } else {
+            //     player_position.y = lerp(player_position.y, collision.point.y, 0.025f);
+            // }
+        }
+
+        collision = get_ray_collision_stairs(player_ray, stairs);
+        if (collision.hit) {
+            ray_color = GREEN;
+
+            // if (collision.distance <= 10.f) {
+                player_position.y = collision.point.y - PLAYER_HEIGHT / 2;
+            // } else {
+            //     player_position.y = lerp(player_position.y, collision.point.y - PLAYER_HEIGHT / 2, 0.025f);
+            // }
+        }
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             Vector2 bullet_origin = Vector2Add(player_position, BULLET_ORIGIN_OFFSET);
@@ -162,6 +295,20 @@ int main(int argc, const char **argv) {
                     DrawLineV(Vector2Add(player_position, vec2(0.f, -25.f)), aim_position, RED);
                 #endif
 
+                #if defined(DEBUG) && DEBUG_GIZMOS
+                    DrawRay(player_ray, ray_color);
+
+                #endif
+
+                #if defined(DEBUG) && DEBUG_GIZMOS
+                    DrawPixelV(player_position, WHITE);
+                #endif
+
+                DrawRectangle(0, WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2, 1000, 300, GRAY);
+                draw_stairs(stairs, GRAY);
+
+                draw_bullets(bullets);
+
                 DrawRectangle(
                     player_position.x - PLAYER_WIDTH / 2,
                     player_position.y - PLAYER_HEIGHT / 2,
@@ -169,14 +316,16 @@ int main(int argc, const char **argv) {
                     PLAYER_HEIGHT,
                     BLACK
                 );
-
-                DrawRectangle(WINDOW_WIDTH / 2 - 500, WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2, 1000, 300, GRAY);
-
-                draw_bullets(bullets);
             }
             EndMode2D();
 
             draw_crosshair(mouse_position, CROSS_COLOR); // TODO: Make yellow or something when crosshair is hovering interactable
+
+            #if defined(DEBUG) && DEBUG_GIZMOS
+                char ray_collision_point[40];
+                vec2_print(ray_collision_point, collision.point);
+                DrawText(ray_collision_point, 30, 30, 30, GREEN);
+            #endif
         }
         EndDrawing();
     }
