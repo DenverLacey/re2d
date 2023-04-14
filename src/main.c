@@ -6,7 +6,7 @@
 
 #include "vec.h"
 
-#define DEBUG_GIZMOS 0
+#define DEBUG_GIZMOS 1
 
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
@@ -59,9 +59,44 @@ Vector3 vec3f2(Vector2 v2) {
 }
 
 typedef struct {
-    Vector2 top;
-    Vector2 bottom;
-} Stair;
+    bool hit;
+    float distance;
+    Vector2 point;
+} Collision;
+
+typedef struct {
+    Vector2 left;
+    Vector2 right;
+} FloorSegment;
+
+typedef struct {
+    Vector2 min_extents;
+    Vector2 max_extents;
+    size_t num_segments;
+    FloorSegment *segments;
+} Level;
+
+Level level_make(size_t num_segments, FloorSegment *segments) {
+    Vector2 min_extennts, max_extents;
+    for (size_t i = 0; i < num_segments; ++i) {
+        FloorSegment seg = segments[i];
+
+        if (seg.left.x < min_extennts.x) min_extennts.x = seg.left.x;
+        if (seg.left.y < min_extennts.y) min_extennts.y = seg.left.y;
+        if (seg.right.y < min_extennts.y) min_extennts.y = seg.right.y;
+
+        if (seg.right.x > max_extents.x) max_extents.x = seg.right.x;
+        if (seg.left.y > max_extents.y) max_extents.y = seg.left.y;
+        if (seg.right.y > max_extents.y) max_extents.y = seg.right.y;
+    }
+
+    return (Level){
+        .min_extents = min_extennts,
+        .max_extents = max_extents,
+        .num_segments = num_segments,
+        .segments = segments
+    };
+}
 
 #define vec2_print(str, v2) snprintf(str, sizeof(str), "(%f, %f)", (v2).x, (v2).y)
 
@@ -73,39 +108,42 @@ float inv_lerp(float x, float a, float b) {
     return (x - a) / (b - a);
 }
 
-RayCollision get_ray_collision_stairs(Ray ray, Stair stairs) {
-    #ifdef DEBUG
-        if (ray.direction.x != 0.f && ray.direction.z != 0.f) {
-            TraceLog(LOG_ERROR, "Invalid ray! direction not aligned to Y axis.");
-            abort();
-        }
-    #endif
-
-    Vector2 ray_position = vec2f3(ray.position);
-
-    float stairs_left, stairs_right;
-    if (stairs.top.x < stairs.bottom.x) {
-        stairs_left = stairs.top.x;
-        stairs_right = stairs.bottom.x;
+Collision get_collision_floor(Vector2 position, FloorSegment seg) {
+    float seg_top, seg_bottom;
+    if (seg.left.y < seg.right.y) {
+        seg_top = seg.left.y;
+        seg_bottom = seg.right.y;
     } else {
-        stairs_left = stairs.bottom.x;
-        stairs_right = stairs.top.x;
+        seg_top = seg.right.y;
+        seg_bottom = seg.left.y;
     }
 
-    if (ray_position.x < stairs_left || ray_position.x > stairs_right) {
-        // No collision
-        return (RayCollision){0};
+    if (position.y > seg_bottom) {
+        // no collision
+        return (Collision){0};
     }
 
-    float t = inv_lerp(ray_position.x, stairs_left, stairs_right);
-    Vector2 point = vec2(ray_position.x, lerp(stairs.top.y, stairs.bottom.y, t));
+    if (position.x < seg.left.x || position.x > seg.right.x) {
+        // no collision
+        return (Collision){0};
+    }
 
-    float distance = Vector2Distance(ray_position, point);
+    Vector2 point;
+    if (seg.left.y != seg.right.y) {
+        // stairs
+        float t = inv_lerp(position.x, seg.left.x, seg.right.x);
+        point = vec2(position.x, lerp(seg_top, seg_bottom, t));
+    } else {
+        // floor
+        point = vec2(position.x, seg.left.y);
+    }
 
-    return (RayCollision){
+    float distance = Vector2Distance(position, point);
+
+    return (Collision){
         .hit = true,
         .distance = distance,
-        .point = vec3f2(point)
+        .point = point
     };
 }
 
@@ -172,30 +210,6 @@ void draw_bullets(Vec_Bullet bullets) {
     }
 }
 
-void draw_stairs(Stair stairs, Color color) {
-    Vector2 p1 = stairs.top;
-    Vector2 p2;
-    Vector2 p3;
-
-    if (stairs.bottom.x < p1.x) {
-        //     /|
-        //   /  |
-        // /____|
-
-        p2 = stairs.bottom;
-        p3 = vec2(p1.x, p2.y);
-    } else {
-        // |\ 
-        // | \ 
-        // |__\ 
-
-        p2 = vec2(p1.x, stairs.bottom.y);
-        p3 = stairs.bottom;
-    }
-
-    DrawTriangle(p1, p2, p3, color);
-}
-
 int main(int argc, const char **argv) {
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "The Game");
 
@@ -211,15 +225,19 @@ int main(int argc, const char **argv) {
 
     Vec_Bullet bullets = {0};
 
-    BoundingBox ground = (BoundingBox){
-        .min = vec3(0.f, WINDOW_HEIGHT / 2, 0.f),
-        .max = vec3(1000, WINDOW_HEIGHT / 2 + 300, 0.f),
+    FloorSegment segments[] = {
+        // ground
+        (FloorSegment){
+            .left = vec2(0.f, WINDOW_HEIGHT / 2),
+            .right = vec2(1000.f, WINDOW_HEIGHT / 2)
+        },
+        (FloorSegment){
+            .left = vec2(1000.f, WINDOW_HEIGHT / 2),
+            .right = vec2(1400, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300)
+        }
     };
 
-    Stair stairs = (Stair){
-        .top = vec2(1000, WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2),
-        .bottom = vec2(1400, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300)
-    };
+    Level level = level_make(sizeof(segments), segments);
 
     while (!WindowShouldClose()) {
         float delta = GetFrameTime();
@@ -237,33 +255,22 @@ int main(int argc, const char **argv) {
 
         player_position.x += player_velocity;
 
-        Ray player_ray = (Ray){
-            .position = vec3f2(player_position),
-            .direction = vec3(0.f, 1.f, 0.f)
-        };
-
-        RayCollision collision = GetRayCollisionBox(player_ray, ground);
-
         Color ray_color = RED;
-        if (collision.hit) {
-            ray_color = GREEN;
+        Vector2 collision_point = {0};
+        for (size_t i = 0; i < level.num_segments; ++i) {
+            FloorSegment seg = level.segments[i];
+            Collision collision = get_collision_floor(player_position, seg);
 
-            // if (collision.distance <= 1.5f) {
-                player_position.y = collision.point.y;
-            // } else {
-            //     player_position.y = lerp(player_position.y, collision.point.y, 0.025f);
-            // }
-        }
+            if (collision.hit) {
+                ray_color = GREEN;
+                collision_point = collision.point;
 
-        collision = get_ray_collision_stairs(player_ray, stairs);
-        if (collision.hit) {
-            ray_color = GREEN;
-
-            // if (collision.distance <= 10.f) {
-                player_position.y = collision.point.y - PLAYER_HEIGHT / 2;
-            // } else {
-            //     player_position.y = lerp(player_position.y, collision.point.y - PLAYER_HEIGHT / 2, 0.025f);
-            // }
+                // if (collision.distance <= 10.f) {
+                    player_position.y = collision.point.y - PLAYER_HEIGHT / 2;
+                // } else {
+                //     player_position.y = lerp(player_position.y, collision.point.y - PLAYER_HEIGHT / 2, 0.025f);
+                // }
+            }
         }
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
@@ -296,16 +303,17 @@ int main(int argc, const char **argv) {
                 #endif
 
                 #if defined(DEBUG) && DEBUG_GIZMOS
-                    DrawRay(player_ray, ray_color);
-
+                    DrawLineV(player_position, Vector2Add(player_position, vec2(0.f, 1000.f)), ray_color);
                 #endif
 
                 #if defined(DEBUG) && DEBUG_GIZMOS
                     DrawPixelV(player_position, WHITE);
                 #endif
 
-                DrawRectangle(0, WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2, 1000, 300, GRAY);
-                draw_stairs(stairs, GRAY);
+                for (size_t i = 0; i < level.num_segments; i++) {
+                    FloorSegment seg = level.segments[i];
+                    DrawLineV(seg.left, seg.right, GRAY);
+                }
 
                 draw_bullets(bullets);
 
@@ -323,7 +331,7 @@ int main(int argc, const char **argv) {
 
             #if defined(DEBUG) && DEBUG_GIZMOS
                 char ray_collision_point[40];
-                vec2_print(ray_collision_point, collision.point);
+                vec2_print(ray_collision_point, collision_point);
                 DrawText(ray_collision_point, 30, 30, 30, GREEN);
             #endif
         }
