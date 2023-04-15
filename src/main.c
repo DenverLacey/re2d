@@ -67,19 +67,21 @@ typedef struct {
 typedef struct {
     Vector2 left;
     Vector2 right;
-} FloorSegment;
+} Floor_Segment;
 
 typedef struct {
     Vector2 min_extents;
     Vector2 max_extents;
     size_t num_segments;
-    FloorSegment *segments;
-} Level;
+    Floor_Segment *segments;
+    size_t num_stair_vertices;
+    Vector2 *stair_vertices;
+} Level_Geometry;
 
-Level level_make(size_t num_segments, FloorSegment *segments) {
+Level_Geometry level_make_geometry(size_t num_segments, Floor_Segment *segments) {
     Vector2 min_extennts, max_extents;
     for (size_t i = 0; i < num_segments; ++i) {
-        FloorSegment seg = segments[i];
+        Floor_Segment seg = segments[i];
 
         if (seg.left.x < min_extennts.x) min_extennts.x = seg.left.x;
         if (seg.left.y < min_extennts.y) min_extennts.y = seg.left.y;
@@ -90,11 +92,13 @@ Level level_make(size_t num_segments, FloorSegment *segments) {
         if (seg.right.y > max_extents.y) max_extents.y = seg.right.y;
     }
 
-    return (Level){
+    return (Level_Geometry){
         .min_extents = min_extennts,
         .max_extents = max_extents,
         .num_segments = num_segments,
-        .segments = segments
+        .segments = segments,
+        .num_stair_vertices = 0,
+        .stair_vertices = NULL
     };
 }
 
@@ -108,7 +112,7 @@ float inv_lerp(float x, float a, float b) {
     return (x - a) / (b - a);
 }
 
-Collision get_collision_floor(Vector2 position, FloorSegment seg) {
+Collision get_collision_floor(Vector2 position, Floor_Segment seg) {
     float seg_top, seg_bottom;
     if (seg.left.y < seg.right.y) {
         seg_top = seg.left.y;
@@ -145,6 +149,42 @@ Collision get_collision_floor(Vector2 position, FloorSegment seg) {
         .distance = distance,
         .point = point
     };
+}
+
+Vector2 calculate_desired_floor_position(Vector2 current, size_t num_segments, Floor_Segment *segments) {
+    float distance = INFINITY;
+    float nearest_vertex_distance_sqr = INFINITY;
+    Vector2 new = current;
+    Vector2 nearest_vertex = current;
+
+    for (size_t i = 0; i < num_segments; ++i) {
+        Floor_Segment seg = segments[i];
+        Collision collision = get_collision_floor(current, seg);
+
+        float sqr_dist_left = Vector2DistanceSqr(current, seg.left);
+        float sqr_dist_right = Vector2DistanceSqr(current, seg.right);
+        if (sqr_dist_left < nearest_vertex_distance_sqr) {
+            nearest_vertex_distance_sqr = sqr_dist_left;
+            nearest_vertex = seg.left;
+        }
+        if (sqr_dist_right < nearest_vertex_distance_sqr) {
+            nearest_vertex_distance_sqr = sqr_dist_right;
+            nearest_vertex = seg.right;
+        }
+
+        if (collision.hit && collision.distance < distance) {
+            distance = collision.distance;
+            new.y = collision.point.y - PLAYER_HEIGHT / 2;
+        }
+    }
+
+    if (distance == INFINITY) {
+        // no collision
+        new.x = nearest_vertex.x;
+        new.y = nearest_vertex.y - PLAYER_HEIGHT / 2;
+    }
+
+    return new;
 }
 
 void update_camera(Camera2D *camera, Vector2 player_position, Vector2 extents, float delta) {
@@ -217,6 +257,7 @@ int main(int argc, const char **argv) {
 
     Camera2D player_camera;
     player_camera.target = player_position;
+    player_camera.rotation = 0.f;
     player_camera.offset.x = WINDOW_WIDTH / 2;
     player_camera.offset.y = WINDOW_HEIGHT / 2;
     player_camera.zoom = 1.f;
@@ -225,19 +266,29 @@ int main(int argc, const char **argv) {
 
     Vec_Bullet bullets = {0};
 
-    FloorSegment segments[] = {
+    Floor_Segment segments[] = {
         // ground
-        (FloorSegment){
+        (Floor_Segment){
             .left = vec2(0.f, WINDOW_HEIGHT / 2),
             .right = vec2(1000.f, WINDOW_HEIGHT / 2)
         },
-        (FloorSegment){
+        // stair
+        (Floor_Segment){
             .left = vec2(1000.f, WINDOW_HEIGHT / 2),
+            .right = vec2(1400, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300)
+        },
+        // ground
+        (Floor_Segment){
+            .left = vec2(1400, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
+            .right = vec2(2000, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300)
+        },
+        (Floor_Segment){
+            .left = vec2(0.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
             .right = vec2(1400, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300)
         }
     };
 
-    Level level = level_make(sizeof(segments), segments);
+    Level_Geometry level = level_make_geometry(sizeof(segments) / sizeof(segments[0]), segments);
 
     while (!WindowShouldClose()) {
         float delta = GetFrameTime();
@@ -254,24 +305,8 @@ int main(int argc, const char **argv) {
         player_velocity *= PLAYER_SPEED * delta;
 
         player_position.x += player_velocity;
-
-        Color ray_color = RED;
-        Vector2 collision_point = {0};
-        for (size_t i = 0; i < level.num_segments; ++i) {
-            FloorSegment seg = level.segments[i];
-            Collision collision = get_collision_floor(player_position, seg);
-
-            if (collision.hit) {
-                ray_color = GREEN;
-                collision_point = collision.point;
-
-                // if (collision.distance <= 10.f) {
-                    player_position.y = collision.point.y - PLAYER_HEIGHT / 2;
-                // } else {
-                //     player_position.y = lerp(player_position.y, collision.point.y - PLAYER_HEIGHT / 2, 0.025f);
-                // }
-            }
-        }
+        Vector2 desired_position = calculate_desired_floor_position(player_position, level.num_segments, level.segments);
+        player_position = desired_position;
 
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             Vector2 bullet_origin = Vector2Add(player_position, BULLET_ORIGIN_OFFSET);
@@ -302,16 +337,8 @@ int main(int argc, const char **argv) {
                     DrawLineV(Vector2Add(player_position, vec2(0.f, -25.f)), aim_position, RED);
                 #endif
 
-                #if defined(DEBUG) && DEBUG_GIZMOS
-                    DrawLineV(player_position, Vector2Add(player_position, vec2(0.f, 1000.f)), ray_color);
-                #endif
-
-                #if defined(DEBUG) && DEBUG_GIZMOS
-                    DrawPixelV(player_position, WHITE);
-                #endif
-
                 for (size_t i = 0; i < level.num_segments; i++) {
-                    FloorSegment seg = level.segments[i];
+                    Floor_Segment seg = level.segments[i];
                     DrawLineV(seg.left, seg.right, GRAY);
                 }
 
@@ -324,16 +351,15 @@ int main(int argc, const char **argv) {
                     PLAYER_HEIGHT,
                     BLACK
                 );
+
+                #if defined(DEBUG) && DEBUG_GIZMOS
+                    DrawPixelV(player_position, WHITE);
+                #endif
+
             }
             EndMode2D();
 
             draw_crosshair(mouse_position, CROSS_COLOR); // TODO: Make yellow or something when crosshair is hovering interactable
-
-            #if defined(DEBUG) && DEBUG_GIZMOS
-                char ray_collision_point[40];
-                vec2_print(ray_collision_point, collision_point);
-                DrawText(ray_collision_point, 30, 30, 30, GREEN);
-            #endif
         }
         EndDrawing();
     }
