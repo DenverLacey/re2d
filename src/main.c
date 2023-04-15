@@ -11,6 +11,11 @@
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
 
+#define CAMERA_MARGIN 50.f
+#define CAMERA_MIN_SPEED 30.f
+#define CAMERA_MIN_EFFECT_LENGTH 30.f
+#define CAMERA_FRACTION_SPEED 2.f
+
 #define PLAYER_WIDTH 25.f
 #define PLAYER_HEIGHT 100.f
 #define PLAYER_COLOR BLACK
@@ -187,22 +192,18 @@ Vector2 calculate_desired_floor_position(Vector2 current, size_t num_segments, F
     return new;
 }
 
-void update_camera(Camera2D *camera, Vector2 player_position, Vector2 extents, float delta) {
-    static float min_speed = 30;
-    static float min_effect_length = 10;
-    static float fraction_speed = 2.f;
-
+void update_camera(Camera2D *camera, Vector2 player_position, Vector2 min_extents, Vector2 max_extents, float delta) {
     camera->offset = vec2(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
     Vector2 diff = Vector2Subtract(player_position, camera->target);
     float length = Vector2Length(diff);
 
-    if (length > min_effect_length) {
-        float speed = fmaxf(fraction_speed * length, min_speed);
+    if (length > CAMERA_MIN_EFFECT_LENGTH) {
+        float speed = fmaxf(CAMERA_FRACTION_SPEED * length, CAMERA_MIN_SPEED);
         camera->target = Vector2Add(camera->target, Vector2Scale(diff, speed * delta / length));
     }
 
-    Vector2 min = GetWorldToScreen2D(vec2(0, 0), *camera);
-    Vector2 max = GetWorldToScreen2D(extents, *camera);
+    Vector2 min = GetWorldToScreen2D(Vector2Add(min_extents, vec2(-CAMERA_MARGIN, 0.f)), *camera);
+    Vector2 max = GetWorldToScreen2D(Vector2Add(max_extents, vec2(CAMERA_MARGIN, WINDOW_HEIGHT / 2)), *camera);
 
     if (max.x < WINDOW_WIDTH) camera->offset.x = WINDOW_WIDTH - (max.x - WINDOW_WIDTH / 2);
     if (max.y < WINDOW_HEIGHT) camera->offset.y = WINDOW_HEIGHT - (max.y - WINDOW_HEIGHT / 2);
@@ -323,7 +324,7 @@ int main(int argc, const char **argv) {
             vec_append(&bullets, bullet);
         }
 
-        update_camera(&player_camera, player_position, vec2(WINDOW_WIDTH * 2, WINDOW_HEIGHT * 2), delta);
+        update_camera(&player_camera, player_position, level.min_extents, level.max_extents, delta);
         update_bullets(&bullets, delta);
 
         // Draw ===============================================================
