@@ -3,7 +3,7 @@
 #include "input.h"
 #include "level_geometry.h"
 
-void player_poll_input(Input *input) {
+void player_poll_input(Input *input, Camera2D camera) {
     input->player_movement = (Vector2){0};
     
     input_set_flags_if(input, IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_LEFT), Input_Flags_AIMING);
@@ -13,17 +13,19 @@ void player_poll_input(Input *input) {
         if (IsKeyDown(KEY_A)) input->player_movement.x -= 1;
         if (IsKeyDown(KEY_S)) input->player_movement.y += 1;
         if (IsKeyDown(KEY_D)) input->player_movement.x += 1;
+    } else {
+        input->aim_position = GetWorldToScreen2D(input->mouse_position, camera);
     }
 }
 
-void player_update(Player *player, Input *input, Camera2D camera, Level_Geometry *level) {
+void player_update(Player *player, Input *input, Level_Geometry *level) {
     player->position.x += input->player_movement.x * PLAYER_SPEED * input->delta_time;
 
     Vector2 desired_position = calculate_desired_floor_position(player->position, level->num_segments, level->segments);
     player->position = desired_position;
 
     if (input_is_flags_set(input, Input_Flags_AIMING)) {
-        Vector2 aim_position = GetScreenToWorld2D(input->mouse_position, camera);
+        Vector2 aim_position = input->aim_position;
         // TODO: Check for collision with shootable object
     }
 }

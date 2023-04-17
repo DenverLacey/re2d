@@ -21,3 +21,7 @@ project "re2d"
 
     filter "configurations:debug"
         defines { "DEBUG" }
+        optimize "Debug"
+
+    filter "configurations:release"
+        optimize "Speed"

@@ -15,7 +15,7 @@ typedef struct {
     Vector2 position;
 } Player;
 
-void player_poll_input(Input *input);
-void player_update(Player *player, Input *input, Camera2D camera, Level_Geometry *level);
+void player_poll_input(Input *input, Camera2D camera);
+void player_update(Player *player, Input *input, Level_Geometry *level);
 
 #endif

@@ -109,10 +109,10 @@ int main(int argc, const char **argv) {
         input.delta_time = GetFrameTime();
         input.mouse_position = GetMousePosition();
 
-        player_poll_input(&input);
+        player_poll_input(&input, player_camera);
 
         // Update =============================================================
-        player_update(&player, &input, player_camera, &level);
+        player_update(&player, &input, &level);
         update_camera(&player_camera, player.position, level.min_extents, level.max_extents, input.delta_time);
 
         // Draw ===============================================================
