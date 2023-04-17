@@ -1,4 +1,14 @@
+# IDE Folders
 .vscode
+
+# macOS Junk
 **/.DS_Store
+
+# Output Artifacts
 run
 bin/
+obj/
+
+# Build Scripts
+Makefile
+*.make
