@@ -69,12 +69,12 @@ int main(int argc, const char **argv) {
         .position = vec2(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2 - PLAYER_HEIGHT / 2)
     };
 
-    Camera2D player_camera;
-    player_camera.target = player.position;
-    player_camera.rotation = 0.f;
-    player_camera.offset.x = WINDOW_WIDTH / 2;
-    player_camera.offset.y = WINDOW_HEIGHT / 2;
-    player_camera.zoom = 1.f;
+    Camera2D world_camera;
+    world_camera.target = player.position;
+    world_camera.rotation = 0.f;
+    world_camera.offset.x = WINDOW_WIDTH / 2;
+    world_camera.offset.y = WINDOW_HEIGHT / 2;
+    world_camera.zoom = 1.f;
 
     HideCursor();
 
@@ -109,41 +109,30 @@ int main(int argc, const char **argv) {
         input.delta_time = GetFrameTime();
         input.mouse_position = GetMousePosition();
 
-        player_poll_input(&input, player_camera);
+        player_poll_input(&input, world_camera);
 
         // Update =============================================================
         player_update(&player, &input, &level);
-        update_camera(&player_camera, player.position, level.min_extents, level.max_extents, input.delta_time);
+        update_camera(&world_camera, player.position, level.min_extents, level.max_extents, input.delta_time);
 
         // Draw ===============================================================
         ClearBackground(WHITE);
         BeginDrawing();
         {
-            BeginMode2D(player_camera);
+            BeginMode2D(world_camera);
             {
-                for (size_t i = 0; i < level.num_segments; i++) {
-                    Floor_Segment seg = level.segments[i];
-                    DrawLineV(seg.left, seg.right, GRAY);
-                }
+                #ifdef DEBUG
+                    level_geoetry_draw_gizmos(&level);
+                #endif
 
                 if (input_is_flags_set(&input, Input_Flags_AIMING)) {
                     Vector2 origin = Vector2Add(player.position, BULLET_ORIGIN_OFFSET);
-                    Vector2 aiming_position = GetScreenToWorld2D(input.mouse_position, player_camera);
+                    Vector2 aiming_position = GetScreenToWorld2D(input.mouse_position, world_camera);
                     DrawLineEx(origin, aiming_position, 1.5f, RED);
                     DrawCircleV(aiming_position, 2.f, RED);
                 }
 
-                DrawRectangle(
-                    player.position.x - PLAYER_WIDTH / 2,
-                    player.position.y - PLAYER_HEIGHT / 2,
-                    PLAYER_WIDTH,
-                    PLAYER_HEIGHT,
-                    BLACK
-                );
-
-                #if defined(DEBUG) && DEBUG_GIZMOS
-                    DrawPixelV(player.position, WHITE);
-                #endif
+                player_draw(&player);
             }
             EndMode2D();
 

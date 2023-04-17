@@ -6,7 +6,7 @@
 void player_poll_input(Input *input, Camera2D camera) {
     input->player_movement = (Vector2){0};
     
-    input_set_flags_if(input, IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_LEFT), Input_Flags_AIMING);
+    input_set_flags_if(input, IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT), Input_Flags_AIMING);
 
     if (!input_is_flags_set(input, Input_Flags_AIMING)) {
         if (IsKeyDown(KEY_W)) input->player_movement.y -= 1;
@@ -28,4 +28,18 @@ void player_update(Player *player, Input *input, Level_Geometry *level) {
         Vector2 aim_position = input->aim_position;
         // TODO: Check for collision with shootable object
     }
+}
+
+void player_draw(Player *player) {
+    DrawRectangle(
+        player->position.x - PLAYER_WIDTH / 2,
+        player->position.y - PLAYER_HEIGHT / 2,
+        PLAYER_WIDTH,
+        PLAYER_HEIGHT,
+        BLACK
+    );
+
+    #ifdef DEBUG
+        DrawPixelV(player->position, WHITE);
+    #endif
 }

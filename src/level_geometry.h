@@ -24,4 +24,8 @@ Level_Geometry level_geometry_make(size_t num_segments, Floor_Segment *segments)
 // INCOMPLETE: Perhaps this doesn't belong here
 Vector2 calculate_desired_floor_position(Vector2 player, size_t num_segments, Floor_Segment *segments);
 
+#ifdef DEBUG
+void level_geoetry_draw_gizmos(Level_Geometry *level);
+#endif
+
 #endif 

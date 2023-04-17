@@ -17,5 +17,6 @@ typedef struct {
 
 void player_poll_input(Input *input, Camera2D camera);
 void player_update(Player *player, Input *input, Level_Geometry *level);
+void player_draw(Player *player);
 
 #endif

@@ -9,13 +9,15 @@
 #include "collisions.h"
 
 Level_Geometry level_geometry_make(size_t num_segments, Floor_Segment *segments) {
-    Vector2 min_extennts, max_extents;
+    Vector2 min_extents = {0};
+    Vector2 max_extents = {0};
+
     for (size_t i = 0; i < num_segments; ++i) {
         Floor_Segment seg = segments[i];
 
-        if (seg.left.x < min_extennts.x) min_extennts.x = seg.left.x;
-        if (seg.left.y < min_extennts.y) min_extennts.y = seg.left.y;
-        if (seg.right.y < min_extennts.y) min_extennts.y = seg.right.y;
+        if (seg.left.x < min_extents.x) min_extents.x = seg.left.x;
+        if (seg.left.y < min_extents.y) min_extents.y = seg.left.y;
+        if (seg.right.y < min_extents.y) min_extents.y = seg.right.y;
 
         if (seg.right.x > max_extents.x) max_extents.x = seg.right.x;
         if (seg.left.y > max_extents.y) max_extents.y = seg.left.y;
@@ -23,7 +25,7 @@ Level_Geometry level_geometry_make(size_t num_segments, Floor_Segment *segments)
     }
 
     return (Level_Geometry){
-        .min_extents = min_extennts,
+        .min_extents = min_extents,
         .max_extents = max_extents,
         .num_segments = num_segments,
         .segments = segments,
@@ -67,3 +69,23 @@ Vector2 calculate_desired_floor_position(Vector2 player, size_t num_segments, Fl
 
     return new;
 }
+
+#ifdef DEBUG
+
+void level_geoetry_draw_gizmos(Level_Geometry *level) {
+    for (size_t i = 0; i < level->num_segments; i++) {
+        Floor_Segment seg = level->segments[i];
+        DrawLineV(seg.left, seg.right, LIME);
+        DrawLineEx(seg.left, seg.right, 1.f, LIME);
+    }
+
+    Rectangle level_rect = (Rectangle){
+        .x = level->min_extents.x,
+        .y = level->min_extents.y,
+        .width = level->max_extents.x - level->min_extents.y,
+        .height = level->max_extents.y - level->min_extents.y
+    };
+    DrawRectangleLinesEx(level_rect, 1.f, LIME);
+}
+
+#endif // DEBUG
