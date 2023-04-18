@@ -27,7 +27,7 @@ void player_update(Player *player, Input *input, Level_Geometry *level) {
     Floor_Movement movement = calculate_floor_movement(
         level->num_segments,
         level->segments,
-        Vector2Add(player->position, vec2(0.f, PLAYER_HEIGHT / 2)),
+        player->position,
         player->current_floor_segment,
         input->player_movement
     );

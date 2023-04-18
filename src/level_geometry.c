@@ -123,7 +123,12 @@ Floor_Movement calculate_floor_movement(
     } else {
         result.falling = false;
         result.floor_segment = current_floor_segment;
-        result.desired_position = lerpv(current_segment.left, current_segment.right, t);
+        if (current_segment.left.y != current_segment.right.y) {
+            result.desired_position = lerpv(current_segment.left, current_segment.right, t);
+        } else {
+            result.desired_position.x = player_position.x;
+            result.desired_position.y = current_segment.left.y;
+        }
     }
 
     return result;

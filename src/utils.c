@@ -24,7 +24,7 @@ Vector3 vec3f2(Vector2 v2) {
 }
 
 float lerp(float a, float b, float t) {
-    return (1 - t) * a + t * b;
+    return a + t * (b - a);
 }
 
 float inv_lerp(float x, float a, float b) {

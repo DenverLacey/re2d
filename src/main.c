@@ -196,6 +196,8 @@ int main(int argc, const char **argv) {
 
         // Update =============================================================
         player_update(&player, &input, &level);
+
+        // Late Update ========================================================
         update_camera(&world_camera, player.position, level.min_extents, level.max_extents, input.delta_time);
 
         // Draw ===============================================================
