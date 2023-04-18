@@ -30,3 +30,13 @@ float lerp(float a, float b, float t) {
 float inv_lerp(float x, float a, float b) {
     return (x - a) / (b - a);
 }
+
+Vector2 lerpv(Vector2 a, Vector2 b, float t) {
+    return vec2(lerp(a.x, b.x, t), lerp(a.y, b.y, t));
+}
+
+float clamp(float a, float min, float max) {
+    if (a < min) a = min;
+    if (a > max) a = max;
+    return a;
+}

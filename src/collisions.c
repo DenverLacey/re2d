@@ -35,6 +35,9 @@ Collision collision_player_vs_floor_segment(Vector2 player, Floor_Segment seg) {
     }
 
     float distance = Vector2Distance(player, point);
+    if (distance > 10.f) {
+        return (Collision){0};
+    }
 
     return (Collision){
         .hit = true,

@@ -6,8 +6,15 @@
 #include "raylib.h"
 
 typedef struct {
-    Vector2 left;
-    Vector2 right;
+    int up;
+    int straight;
+    int down;
+    int fall;
+} Segment_Joint;
+
+typedef struct {
+    Vector2 left, right;
+    Segment_Joint left_joint, right_joint;
 } Floor_Segment;
 
 typedef struct {
@@ -15,17 +22,19 @@ typedef struct {
     Vector2 max_extents;
     size_t num_segments;
     Floor_Segment *segments;
-    size_t num_stair_vertices;
-    Vector2 *stair_vertices;
 } Level_Geometry;
 
-Level_Geometry level_geometry_make(size_t num_segments, Floor_Segment *segments);
+typedef struct {
+    bool falling;
+    int floor_segment;
+    Vector2 desired_position;
+} Floor_Movement;
 
-// INCOMPLETE: Perhaps this doesn't belong here
-Vector2 calculate_desired_floor_position(Vector2 player, size_t num_segments, Floor_Segment *segments);
+Level_Geometry level_geometry_make(size_t num_segments, Floor_Segment *segments);
+Floor_Movement calculate_floor_movement(size_t num_segments, Floor_Segment *segments, Vector2 player_position, int current_floor_segment, Vector2 player_movement);
 
 #ifdef DEBUG
-void level_geoetry_draw_gizmos(Level_Geometry *level);
+void level_geometry_draw_gizmos(Level_Geometry *level);
 #endif
 
 #endif 

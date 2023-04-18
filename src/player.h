@@ -12,6 +12,7 @@
 #define PLAYER_SPEED 300
 
 typedef struct {
+    int current_floor_segment;
     Vector2 position;
 } Player;
 

@@ -1,7 +1,10 @@
 #include "player.h"
 
+#include "raymath.h"
+
 #include "input.h"
 #include "level_geometry.h"
+#include "utils.h"
 
 void player_poll_input(Input *input, Camera2D camera) {
     input->player_movement = (Vector2){0};
@@ -21,8 +24,17 @@ void player_poll_input(Input *input, Camera2D camera) {
 void player_update(Player *player, Input *input, Level_Geometry *level) {
     player->position.x += input->player_movement.x * PLAYER_SPEED * input->delta_time;
 
-    Vector2 desired_position = calculate_desired_floor_position(player->position, level->num_segments, level->segments);
-    player->position = desired_position;
+    Floor_Movement movement = calculate_floor_movement(
+        level->num_segments,
+        level->segments,
+        Vector2Add(player->position, vec2(0.f, PLAYER_HEIGHT / 2)),
+        player->current_floor_segment,
+        input->player_movement
+    );
+
+    player->current_floor_segment = movement.floor_segment;
+    player->position.x = movement.desired_position.x;
+    player->position.y = movement.desired_position.y - PLAYER_HEIGHT / 2;
 
     if (input_is_flags_set(input, Input_Flags_AIMING)) {
         Vector2 aim_position = input->aim_position;

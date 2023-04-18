@@ -79,24 +79,107 @@ int main(int argc, const char **argv) {
     HideCursor();
 
     Floor_Segment segments[] = {
-        // ground
+        // ground 1
         (Floor_Segment){
             .left = vec2(0.f, WINDOW_HEIGHT / 2),
-            .right = vec2(1000.f, WINDOW_HEIGHT / 2)
+            .right = vec2(1000.f, WINDOW_HEIGHT / 2),
+            .left_joint = (Segment_Joint){
+                .up = -1,
+                .straight = -1,
+                .down = -1,
+                .fall = -1
+            },
+            .right_joint = (Segment_Joint){
+                .up = -1,
+                .straight = 1,
+                .down = 3,
+                .fall = -1,
+            }
         },
-        // stair
+        // ground 2
         (Floor_Segment){
             .left = vec2(1000.f, WINDOW_HEIGHT / 2),
-            .right = vec2(1400, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300)
+            .right = vec2(1500.f, WINDOW_HEIGHT / 2),
+            .left_joint = (Segment_Joint){
+                .up = -1,
+                .straight = 0,
+                .down = -1,
+                .fall = -1
+            },
+            .right_joint = (Segment_Joint){
+                .up = -1,
+                .straight = 2,
+                .down = -1,
+                .fall = -1
+            }
         },
-        // ground
+        // ramp
+        (Floor_Segment){
+            .left = vec2(1500.f, WINDOW_HEIGHT / 2),
+            .right = vec2(1750.f, WINDOW_HEIGHT / 2 + 100),
+            .left_joint = (Segment_Joint){
+                .up = -1,
+                .straight = 1,
+                .down = -1,
+                .fall = -1
+            },
+            .right_joint = (Segment_Joint){
+                .up = -1,
+                .straight = -1,
+                .down = -1,
+                .fall = -1
+            }
+        },
+        // stairs 1
+        (Floor_Segment){
+            .left = vec2(1000.f, WINDOW_HEIGHT / 2),
+            .right = vec2(1400, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
+            .left_joint = (Segment_Joint){
+                .up = -1,
+                .straight = 0,
+                .down = -1,
+                .fall = -1,
+            },
+            .right_joint = (Segment_Joint){
+                .up = -1,
+                .straight = 4,
+                .down = -1,
+                .fall = -1
+            }
+        },
+        // ground 3
         (Floor_Segment){
             .left = vec2(1400, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
-            .right = vec2(2000, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300)
+            .right = vec2(2000, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
+            .left_joint = (Segment_Joint){
+                .up = 3,
+                .straight = 5,
+                .down = -1,
+                .fall = -1
+            },
+            .right_joint = (Segment_Joint){
+                .up = -1,
+                .straight = -1,
+                .down = -1,
+                .fall = -1
+            }
         },
+        // ground 4
         (Floor_Segment){
             .left = vec2(0.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
-            .right = vec2(1400, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300)
+            .right = vec2(1400, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
+            .left_joint = (Segment_Joint){
+                .up = -1,
+                .straight = -1,
+                .down = -1,
+                .fall = -1
+            },
+            .right_joint = (Segment_Joint){
+                .up = -1,
+                .straight = 4,
+                .down = -1,
+                .fall = -1
+            }
         }
     };
 
@@ -122,7 +205,7 @@ int main(int argc, const char **argv) {
             BeginMode2D(world_camera);
             {
                 #ifdef DEBUG
-                    level_geoetry_draw_gizmos(&level);
+                    level_geometry_draw_gizmos(&level);
                 #endif
 
                 if (input_is_flags_set(&input, Input_Flags_AIMING)) {
