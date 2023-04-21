@@ -1,5 +1,7 @@
 #include "player.h"
 
+#include <assert.h>
+
 #include "raymath.h"
 
 #include "input.h"
@@ -22,36 +24,45 @@ void player_poll_input(Input *input, Camera2D camera) {
 }
 
 void player_update(Player *player, Input *input, Level_Geometry *level) {
-    player->position.x += input->player_movement.x * PLAYER_SPEED * input->delta_time;
+    {
+        Floor_Segment *s = &level->segments[player->position.s];
+        float s_length = Vector2Distance(s->left, s->right);
+        player->position.t += input->player_movement.x * PLAYER_SPEED * input->delta_time / s_length;
+    }
 
     Floor_Movement movement = calculate_floor_movement(
         level->num_segments,
         level->segments,
         player->position,
-        player->current_floor_segment,
         input->player_movement
     );
 
-    player->current_floor_segment = movement.floor_segment;
-    player->position.x = movement.desired_position.x;
-    player->position.y = movement.desired_position.y - PLAYER_HEIGHT / 2;
-
+    if (movement.falling) {
+        assert(!"TODO: Falling");
+    } else {
+        player->position.s = movement.desired_position.s;
+        player->position.t = lerp(player->position.t, movement.desired_position.t, 0.5f);
+        player->position = movement.desired_position;
+    }
+    
     if (input_is_flags_set(input, Input_Flags_AIMING)) {
         Vector2 aim_position = input->aim_position;
         // TODO: Check for collision with shootable object
     }
 }
 
-void player_draw(Player *player) {
+void player_draw(Player *player, Floor_Segment *segments) {
+    Vector2 position = gpos_to_vec2(player->position, segments);
+
     DrawRectangle(
-        player->position.x - PLAYER_WIDTH / 2,
-        player->position.y - PLAYER_HEIGHT / 2,
+        position.x - PLAYER_WIDTH / 2,
+        position.y - PLAYER_HEIGHT / 2,
         PLAYER_WIDTH,
         PLAYER_HEIGHT,
         BLACK
     );
 
     #ifdef DEBUG
-        DrawPixelV(player->position, WHITE);
+        DrawPixelV(position, WHITE);
     #endif
 }

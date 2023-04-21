@@ -6,7 +6,7 @@
 float lerp(float a, float b, float t);
 Vector2 lerpv(Vector2 a, Vector2 b, float t);
 
-float inv_lerp(float x, float a, float b);
+float ilerp(float x, float a, float b);
 
 Vector2 vec2(float x, float y);
 Vector2 vec2f3(Vector3 v3);

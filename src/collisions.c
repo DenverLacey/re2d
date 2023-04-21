@@ -27,7 +27,7 @@ Collision collision_player_vs_floor_segment(Vector2 player, Floor_Segment seg) {
     Vector2 point;
     if (seg.left.y != seg.right.y) {
         // stairs
-        float t = inv_lerp(player.x, seg.left.x, seg.right.x);
+        float t = ilerp(player.x, seg.left.x, seg.right.x);
         point = vec2(player.x, lerp(seg_top, seg_bottom, t));
     } else {
         // floor

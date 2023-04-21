@@ -27,7 +27,7 @@ float lerp(float a, float b, float t) {
     return a + t * (b - a);
 }
 
-float inv_lerp(float x, float a, float b) {
+float ilerp(float x, float a, float b) {
     return (x - a) / (b - a);
 }
 

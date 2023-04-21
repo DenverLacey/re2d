@@ -9,15 +9,14 @@
 #define PLAYER_WIDTH 25.f
 #define PLAYER_HEIGHT 100.f
 #define PLAYER_COLOR BLACK
-#define PLAYER_SPEED 300
+#define PLAYER_SPEED 350.f
 
 typedef struct {
-    int current_floor_segment;
-    Vector2 position;
+    Geo_Position position;
 } Player;
 
 void player_poll_input(Input *input, Camera2D camera);
 void player_update(Player *player, Input *input, Level_Geometry *level);
-void player_draw(Player *player);
+void player_draw(Player *player, Floor_Segment *segments);
 
 #endif

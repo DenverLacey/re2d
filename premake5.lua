@@ -21,6 +21,7 @@ project "re2d"
 
     filter "configurations:debug"
         defines { "DEBUG" }
+        symbols "On"
         optimize "Debug"
 
     filter "configurations:release"
