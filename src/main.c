@@ -10,7 +10,9 @@
 #include "level_geometry.h"
 #include "utils.h"
 
-#define DEBUG_GIZMOS 1
+#include "view.h"
+
+#define DRAW_GIZMOS 1
 
 #define WINDOW_WIDTH 1280
 #define WINDOW_HEIGHT 720
@@ -64,6 +66,12 @@ void draw_crosshair(Vector2 position, Color color) {
 }
 
 int main(int argc, const char **argv) {
+    #ifdef DEBUG
+        SetTraceLogLevel(LOG_ALL);
+    #else
+        SetTraceLogLevel(LOG_ERROR);
+    #endif
+
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "The Game");
 
     Floor_Segment segments[] = {
@@ -182,18 +190,15 @@ int main(int argc, const char **argv) {
     world_camera.rotation = 0.f;
     world_camera.offset.x = WINDOW_WIDTH / 2;
     world_camera.offset.y = WINDOW_HEIGHT / 2;
-    world_camera.zoom = 1.f;
+    world_camera.zoom = 0.9f;
 
 
     Vec_Enemy enemies = {0};
-    // vec_append(&enemies, (Enemy){
-    //     .position = Vector2Add(segments[5].left, vec2(100.f, -ENEMY_HEIGHT / 2)),
-    //     .destination = Vector2Add(segments[2].right, vec2(0.f, -ENEMY_HEIGHT / 2)),
-    //     .destination_request_time = 0.0,
-    //     .current_segment = 5,
-    //     .target_segment = -1,
-    //     .destination_segment = 2
-    // });
+    vec_append(&enemies, (Enemy){
+        .position = gpos(5, 0.1f)
+    });
+
+    enemy_find_path_to(&enemies.items[0], gpos(2, 0.5f), &level);
 
     Input input;
 
@@ -209,10 +214,12 @@ int main(int argc, const char **argv) {
         // Update =============================================================
         player_update(&player, &input, &level);
 
+#if 1
         for (size_t i = 0; i < enemies.count; ++i) {
             Enemy *e = &enemies.items[i];
             enemy_update(e, &level, input.delta_time);
         }
+#endif
 
         // Late Update ========================================================
         Vector2 player_position = gpos_to_vec2(player.position, level.segments);
@@ -226,11 +233,15 @@ int main(int argc, const char **argv) {
             {
                 #ifdef DEBUG
                     level_geometry_draw_gizmos(&level);
+                    pathfind_geometry_draw_gizmos(&level.pathfinding);
                 #endif
 
                 for (size_t i = 0; i < enemies.count; ++i) {
                     Enemy *e = &enemies.items[i];
-                    enemy_draw(e);
+                    enemy_draw(e, level.segments);
+                    #if defined(DEBUG) && DRAW_GIZMOS
+                        enemy_draw_path(e, level.segments);
+                    #endif
                 }
 
                 if (input_is_flags_set(&input, Input_Flags_AIMING)) {

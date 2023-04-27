@@ -5,7 +5,6 @@
 #include <assert.h>
 
 #include "raymath.h"
-#include "vec.h"
 
 #include "collisions.h"
 #include "utils.h"
@@ -17,6 +16,88 @@ Geo_Position gpos(int s, float t) {
 Vector2 gpos_to_vec2(Geo_Position pos, Floor_Segment *segments) {
     Floor_Segment *s = &segments[pos.s];
     return lerpv(s->left, s->right, pos.t);
+}
+
+int pathfinding_hash_position(Geo_Position position) {
+    int s = position.s;
+    int t = position.t;
+    return t + s * 2;
+}
+
+Pathfind_Node *pathfinding_get_node(Pathfinding *p, Geo_Position position) {
+    int map_index = pathfinding_hash_position(position);
+    int node_index = p->node_map[map_index];
+    return &p->nodes[node_index];
+}
+
+static int pathfinding_add_node_uniq(Vec_Pathfind_Node *nodes, Pathfind_Node node) {
+    for (size_t i = 0; i < nodes->count; ++i) {
+        Pathfind_Node *other = &nodes->items[i];
+        if (Vector2Equals(other->vposition, node.vposition)) {
+            return i;
+        }
+    }
+
+    vec_append(nodes, node);
+    return nodes->count - 1;
+}
+
+bool pathfind_node_is_neighbours_with(Pathfind_Node *node, Pathfind_Node *neighbour) {
+    for (size_t i = 0; i < node->num_neighbours; ++i) {
+        if (node->neighbours[i] == neighbour) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void pathfind_node_connect(Pathfind_Node *a, Pathfind_Node *b) {
+    if (!pathfind_node_is_neighbours_with(a, b)) a->neighbours[a->num_neighbours++] = b;
+    if (!pathfind_node_is_neighbours_with(b, a)) b->neighbours[b->num_neighbours++] = a;
+}
+
+static Pathfinding pathfinding_make(size_t num_segments, Floor_Segment *segments) {
+    Vec_Pathfind_Node nodes = {0};
+    int *node_map = malloc(num_segments * 2 * sizeof(int));
+
+    for (size_t i = 0; i < num_segments; ++i) {
+        Floor_Segment *s = &segments[i];
+
+        Pathfind_Node left_node = (Pathfind_Node){ .position = gpos(i, 0.f), .vposition = s->left };
+        int left_node_idx = pathfinding_add_node_uniq(&nodes, left_node);
+        node_map[0 + i * 2] = left_node_idx; 
+
+        Pathfind_Node right_node = (Pathfind_Node){ .position = gpos(i, 1.f), .vposition = s->right };
+        int right_node_idx = pathfinding_add_node_uniq(&nodes, right_node);
+        node_map[1 + i * 2] = right_node_idx; 
+    }
+
+    for (size_t i = 0; i < nodes.count; ++i) {
+        Pathfind_Node *n = &nodes.items[i];
+        Joint_Index joint = (Joint_Index)n->position.t;
+        int t = 1 - joint;
+
+        Floor_Segment *s = &segments[n->position.s];
+
+        Pathfind_Node *segment_neighbour = &nodes.items[node_map[t + n->position.s * 2]];
+        pathfind_node_connect(n, segment_neighbour);
+
+        for (int c = 0; c < CONN_COUNT; ++c) {
+            int conn = s->joints[joint].connections[c];
+            if (conn == -1) continue;
+
+            Pathfind_Node *neighbour = &nodes.items[node_map[t + conn * 2]];
+            if (neighbour == n) neighbour = &nodes.items[node_map[joint + conn * 2]];
+            pathfind_node_connect(n, neighbour);
+        }
+    }
+
+    return (Pathfinding){
+        .node_map_size = num_segments * 2,
+        .node_map = node_map,
+        .num_nodes = nodes.count,
+        .nodes = nodes.items
+    };
 }
 
 Level_Geometry level_geometry_make(size_t num_segments, Floor_Segment *segments) {
@@ -35,11 +116,14 @@ Level_Geometry level_geometry_make(size_t num_segments, Floor_Segment *segments)
         if (seg.right.y > max_extents.y) max_extents.y = seg.right.y;
     }
 
+    Pathfinding pathfinding = pathfinding_make(num_segments, segments);
+
     return (Level_Geometry){
         .min_extents = min_extents,
         .max_extents = max_extents,
         .num_segments = num_segments,
         .segments = segments,
+        .pathfinding = pathfinding
     };
 }
 
@@ -122,82 +206,103 @@ bool point_is_on_line(Vector2 p, Vector2 a, Vector2 b) {
 }
 
 // Research: https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#line-defined-by-two-points
-Clamped_Position level_geometry_clamp_position(Level_Geometry *level, Vector2 position) {
-
-    return (Clamped_Position){0};
+Geo_Position vec2_to_closest_gpos(Vector2 v, size_t num_segments, Floor_Segment *segments) {
+    return (Geo_Position){0};
 }
 
-typedef struct {
-    int segment;
-    int joint;
-    float g;
-    float h;
-} Pathfind_Node;
-
-DEFINE_VEC_FOR_TYPE(Pathfind_Node);
-DEFINE_VEC_FOR_TYPE(Vector2);
-
-typedef struct {
-    Vec_Pathfind_Node nodes;
-    Vec_Vector2 node_positions;
-    Vec_int open_set;
-} Pathfind_State;
-
-int pathfind_add_node(Pathfind_State *state, Pathfind_Node node, Vector2 node_position) {
-    int node_idx = vec_find(state->node_positions, node_position);
-    if (node_idx != -1) {
-        return node_idx;
+static void init_pathfind_nodes(size_t num_nodes, Pathfind_Node *nodes, Vector2 goal) {
+    for (size_t i = 0; i < num_nodes; ++i) {
+        Pathfind_Node *node = &nodes[i];
+        node->comes_from = NULL;
+        node->g_score = INFINITY;
+        node->h_score = Vector2Distance(node->vposition, goal);
     }
+}
 
-    node_idx = state->nodes.count;
-
-    vec_append(&state->nodes, node);
-    vec_append(&state->node_positions, node_position);
-
+static void pathfind_add_to_open_set(Vec_Pathfind_Node_Ptr *set, Pathfind_Node *node) {
     size_t i;
-    for (i = 0; i < state->open_set.count; ++i) {
-        Pathfind_Node other = state->nodes.items[state->open_set.items[i]];
-        float node_f = node.g + node.h;
-        float other_f = other.g + other.h;
-        if (other_f > node_f) {
-            vec_insert_ordered(&state->open_set, i, node_idx);
+    for (i = 0; i < set->count; ++i) {
+        Pathfind_Node *other = set->items[i];
+        float node_f_score = node->g_score + node->h_score;
+        float other_f_score = other->g_score + other->h_score;
+        if (other_f_score > node_f_score) {
+            vec_insert_ordered(set, i, node);
             break;
         }
     }
 
-    if (i == state->open_set.count) {
-        vec_append(&state->open_set, node_idx);
+    if (i == set->count) {
+        vec_append(set, node);
     }
-
-    return node_idx;
 }
 
-// RESEARCH: https://en.wikipedia.org/wiki/A*_search_algorithm
-Pathfind_Result level_geometry_pathfind(Level_Geometry *level, int start_seg, Vector2 start, int end_seg, Vector2 end) {
-    // Clamped_Position clamped_start = level_geometry_clamp_position(level, start);
-    // Clamped_Position clamped_end = level_geometry_clamp_position(level, end);
+static void construct_path(Vec_Geo_Position *path, Pathfind_Node *last, Geo_Position end) {
+    vec_append(path, end);
+    for (Pathfind_Node *n = last; n != NULL; n = n->comes_from) {
+        vec_append(path, n->position);
+    }
+}
 
-    Clamped_Position clamped_start = (Clamped_Position){ .floor_segment = start_seg, .clamped_position = start };
-    Clamped_Position clamped_end = (Clamped_Position){ .floor_segment = end_seg, .clamped_position = end };
+// // RESEARCH: https://en.wikipedia.org/wiki/A*_search_algorithm
+Vec_Geo_Position level_geometry_pathfind(Level_Geometry *level, Geo_Position start, Geo_Position end) {
+    Vector2 end_vposition = gpos_to_vec2(end, level->segments);
+    init_pathfind_nodes(level->pathfinding.num_nodes, level->pathfinding.nodes, end_vposition);
 
-    Pathfind_Node start_node = (Pathfind_Node){
-        .segment = clamped_start.floor_segment,
-        .joint = -1,
-        .g = INFINITY,
-        .h = Vector2Distance(clamped_start.clamped_position, clamped_end.clamped_position)
+    Pathfind_Node *end_nodes[2] = {
+        pathfinding_get_node(&level->pathfinding, gpos(end.s, 0.f)),
+        pathfinding_get_node(&level->pathfinding, gpos(end.s, 1.f))
     };
+    
+    Vec_Geo_Position path = {0};
+    Vec_Pathfind_Node_Ptr open_set = {0};
 
-    Pathfind_State state = {0};
-    pathfind_add_node(&state, start_node, clamped_start.clamped_position);
+    Pathfind_Node *start_left = pathfinding_get_node(&level->pathfinding, gpos(start.s, 0.f));
+    Pathfind_Node *start_right = pathfinding_get_node(&level->pathfinding, gpos(start.s, 1.f));
 
-    while (state.open_set.count != 0) {
-        abort();
+    start_left->g_score = Vector2Distance(
+        gpos_to_vec2(start, level->segments),
+        start_left->vposition
+    );
+    start_right->g_score = Vector2Distance(
+        gpos_to_vec2(start, level->segments),
+        start_right->vposition
+    );
+
+    pathfind_add_to_open_set(&open_set, start_left);
+    pathfind_add_to_open_set(&open_set, start_right);
+
+    while (open_set.count != 0) {
+        Pathfind_Node *current = open_set.items[0];
+        vec_remove_ordered(&open_set, 0);
+
+        if (current == end_nodes[0] || current == end_nodes[1]) {
+            TraceLog(LOG_DEBUG, "Final (%d, %f) comes from (%d, %f)", current->position.s, current->position.t, current->comes_from->position.s, current->comes_from->position.t);
+            construct_path(&path, current, end);
+            break;
+        }
+
+        for (int i = 0; i < current->num_neighbours; ++i) {
+            Pathfind_Node *neighbour = current->neighbours[i];
+
+            float distance = Vector2Distance(current->vposition, neighbour->vposition);
+            float tentative_g_score = current->g_score + distance; 
+
+            if (tentative_g_score < neighbour->g_score) {
+                neighbour->comes_from = current;
+                neighbour->g_score = tentative_g_score;
+
+                if (vec_find(open_set, neighbour) == -1) {
+                    pathfind_add_to_open_set(&open_set, neighbour);
+                }
+            }
+        }
     }
 
-    return (Pathfind_Result){
-        .segment = clamped_start.floor_segment,
-        .position = clamped_start.clamped_position
-    };
+    return path;
+}
+
+float segment_length(Floor_Segment *s) {
+    return Vector2Distance(s->left, s->right);
 }
 
 #ifdef DEBUG
@@ -214,6 +319,19 @@ void level_geometry_draw_gizmos(Level_Geometry *level) {
     for (size_t i = 0; i < level->num_segments; i++) {
         Floor_Segment seg = level->segments[i];
         DrawLineEx(seg.left, seg.right, 1.f, GRAY);
+    }
+}
+
+void pathfind_geometry_draw_gizmos(Pathfinding *p) {
+    for (size_t i = 0; i < p->num_nodes; ++i) {
+        Pathfind_Node *node = &p->nodes[i];
+
+        DrawCircleV(node->vposition, 4.f, MAGENTA);
+
+        for (size_t j = 0; j < node->num_neighbours; ++j) {
+            Pathfind_Node *neighbour = node->neighbours[j];
+            DrawLineEx(node->vposition, neighbour->vposition, 1.f, MAGENTA);
+        }
     }
 }
 

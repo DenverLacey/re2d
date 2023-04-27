@@ -26,7 +26,7 @@ void player_poll_input(Input *input, Camera2D camera) {
 void player_update(Player *player, Input *input, Level_Geometry *level) {
     {
         Floor_Segment *s = &level->segments[player->position.s];
-        float s_length = Vector2Distance(s->left, s->right);
+        float s_length = segment_length(s);
         player->position.t += input->player_movement.x * PLAYER_SPEED * input->delta_time / s_length;
     }
 
@@ -40,8 +40,6 @@ void player_update(Player *player, Input *input, Level_Geometry *level) {
     if (movement.falling) {
         assert(!"TODO: Falling");
     } else {
-        player->position.s = movement.desired_position.s;
-        player->position.t = lerp(player->position.t, movement.desired_position.t, 0.5f);
         player->position = movement.desired_position;
     }
     
@@ -55,14 +53,14 @@ void player_draw(Player *player, Floor_Segment *segments) {
     Vector2 position = gpos_to_vec2(player->position, segments);
 
     DrawRectangle(
-        position.x - PLAYER_WIDTH / 2,
-        position.y - PLAYER_HEIGHT / 2,
+        position.x - PLAYER_WIDTH / 2.f,
+        position.y - PLAYER_HEIGHT,
         PLAYER_WIDTH,
         PLAYER_HEIGHT,
         BLACK
     );
 
     #ifdef DEBUG
-        DrawPixelV(position, WHITE);
+        DrawCircleV(position, 2.f, LIME);
     #endif
 }

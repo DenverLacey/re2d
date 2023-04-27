@@ -27,8 +27,8 @@
     size_t _idx = idx;                                                                        \
     vec_ensure_capacity(vec, (vec)->count + 1);                                               \
     memmove(                                                                                  \
-        &(vec)->items[_idx],                                                                  \
         &(vec)->items[_idx + 1],                                                              \
+        &(vec)->items[_idx],                                                                  \
         ((vec)->count - _idx) * sizeof(*(vec)->items)                                         \
     );                                                                                        \
     (vec)->items[_idx] = __VA_ARGS__;                                                         \
@@ -37,8 +37,28 @@
 
 #define vec_remove(vec, idx) ((vec)->items[idx] = (vec)->items[--(vec)->count])
 
+#define vec_remove_ordered(vec, idx) do {                                                     \
+    size_t _idx = idx;                                                                        \
+    memmove(                                                                                  \
+        &(vec)->items[_idx],                                                                  \
+        &(vec)->items[_idx + 1],                                                              \
+        ((vec)->count - _idx) * sizeof(*(vec)->items)                                         \
+    );                                                                                        \
+    --(vec)->count;                                                                           \
+} while (0)
+
 #define vec_find(vec, item) vec_internal_find((vec).count, (vec).items, &(item), sizeof(item))
 int vec_internal_find(size_t count, const void *items, const void *item, size_t stride);
+
+#define vec_clear(vec) do {                                                                   \
+    (vec)->count = 0;                                                                         \
+} while (0)
+
+#define vec_free(vec) do {                                                                    \
+    free((vec)->items);                                                                       \
+    (vec)->count = 0;                                                                         \
+    (vec)->allocated = 0;                                                                     \
+} while (0)
 
 #ifdef bool
     #undef bool
@@ -48,6 +68,7 @@ int vec_internal_find(size_t count, const void *items, const void *item, size_t 
     DEFINE_VEC_FOR_TYPE_WITH_NAME(_Bool, bool);
 #endif
 
+DEFINE_VEC_FOR_TYPE(char);
 DEFINE_VEC_FOR_TYPE(int);
 DEFINE_VEC_FOR_TYPE(float);
 DEFINE_VEC_FOR_TYPE_WITH_NAME(char *, String);

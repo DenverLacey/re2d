@@ -13,18 +13,22 @@
 #define ENEMY_PATHING_WAIT_TIME_SECS 1.5f
 
 typedef struct {
-    Vector2 position;     // current position
-    Vector2 destination;  // final destination of wandering state
-    Vector2 target;
+    Geo_Position position;     // current position
+    Geo_Position destination;  // final destination of `path`
     double destination_request_time;
-    int current_segment;
-    int destination_segment;
-    int target_segment;
+    int target;                // index of current target position in `path`
+    Vec_Geo_Position path;
 } Enemy;
 
 DEFINE_VEC_FOR_TYPE(Enemy);
 
 void enemy_update(Enemy *enemy, Level_Geometry *level, float delta);
-void enemy_draw(Enemy *enemy);
+void enemy_draw(Enemy *enemy, Floor_Segment *segments);
+
+bool enemy_find_path_to(Enemy *enemy, Geo_Position destination, Level_Geometry *level);
+
+#ifdef DEBUG
+void enemy_draw_path(Enemy *enemy, Floor_Segment *segments);
+#endif
 
 #endif
