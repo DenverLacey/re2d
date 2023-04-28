@@ -8,6 +8,14 @@
 #define DEFINE_VEC_FOR_TYPE_WITH_NAME(type, name) typedef struct { size_t count, allocated; type *items; } Vec_ ## name
 #define DEFINE_VEC_FOR_TYPE(type) DEFINE_VEC_FOR_TYPE_WITH_NAME(type, type)
 
+#define vec_with_capacity_using_name(type, typename, n) (Vec_ ## typename){                   \
+    .count = 0,                                                                               \
+    .allocated = n,                                                                           \
+    .items = malloc(n * sizeof(type))                                                         \
+}
+
+#define vec_with_capacity(type, n) vec_with_capacity_using_name(type, type, n)
+
 #define vec_ensure_capacity(vec, count) do {                                                  \
     size_t _count = count;                                                                    \
     if (_count >= (vec)->allocated) {                                                         \
@@ -21,6 +29,14 @@
 #define vec_append(vec, ...) do {                                                             \
     vec_ensure_capacity(vec, (vec)->count + 1);                                               \
     (vec)->items[(vec)->count++] = __VA_ARGS__;                                               \
+} while (0)
+
+#define vec_insert(vec, idx, ...) do {                                                        \
+    size_t _idx = idx;                                                                        \
+    vec_ensure_capacity(vec, (vec)->count + 1);                                               \
+    (vec)->items[(vec)->count] = (vec)->items[_idx];                                          \
+    (vec)->items[_idx] = __VA_ARGS__;                                                         \
+    ++(vec)->count;                                                                           \
 } while (0)
 
 #define vec_insert_ordered(vec, idx, ...) do {                                                \

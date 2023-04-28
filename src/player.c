@@ -24,33 +24,34 @@ void player_poll_input(Input *input, Camera2D camera) {
 }
 
 void player_update(Player *player, Input *input, Level_Geometry *level) {
-    {
-        Floor_Segment *s = &level->segments[player->position.s];
-        float s_length = segment_length(s);
-        player->position.t += input->player_movement.x * PLAYER_SPEED * input->delta_time / s_length;
-    }
-
-    Floor_Movement movement = calculate_floor_movement(
-        level->num_segments,
-        level->segments,
-        player->position,
-        input->player_movement
-    );
-
-    if (movement.falling) {
+    if (player->falling) {
         assert(!"TODO: Falling");
     } else {
-        player->position = movement.desired_position;
-    }
-    
-    if (input_is_flags_set(input, Input_Flags_AIMING)) {
-        Vector2 aim_position = input->aim_position;
-        // TODO: Check for collision with shootable object
+        player->position.x += input->player_movement.x * PLAYER_SPEED * input->delta_time;
+
+        Floor_Movement movement = calculate_floor_movement(
+            level,
+            player->position,
+            player->current_floor,
+            input->player_movement
+        );
+
+        if (movement.falling) {
+            assert(!"TODO: Falling");
+        } else {
+            player->position = movement.desired_position;
+            player->current_floor = movement.new_floor;
+        }
+        
+        if (input_is_flags_set(input, Input_Flags_AIMING)) {
+            Vector2 aim_position = input->aim_position;
+            // TODO: Check for collision with shootable object
+        }
     }
 }
 
-void player_draw(Player *player, Floor_Segment *segments) {
-    Vector2 position = gpos_to_vec2(player->position, segments);
+void player_draw(Player *player) {
+    Vector2 position = player->position;
 
     DrawRectangle(
         position.x - PLAYER_WIDTH / 2.f,

@@ -12,7 +12,7 @@ void enemy_update(Enemy *enemy, Level_Geometry *level, float delta) {
         return;
         // TODO: Find new destination
         TraceLog(LOG_DEBUG, "HERE: PATHFIND!!!");
-        Geo_Position destination = enemy->position;
+        Vector2 destination = enemy->position;
 
         if (!enemy_find_path_to(enemy, destination, level)) {
             TraceLog(LOG_ERROR, "Failed to find path to destination.");
@@ -24,39 +24,24 @@ void enemy_update(Enemy *enemy, Level_Geometry *level, float delta) {
         return;
     }
 
-    Geo_Position target = enemy->path.items[enemy->target];
+    Vector2 target = enemy->path.items[enemy->target];
 
-    {
-        float dir = target.t < enemy->position.t ? -1.f : 1.f;
-        Floor_Segment *s = &level->segments[enemy->position.s];
-        float s_length = segment_length(s);
-        enemy->position.t += ENEMY_SPEED * dir * delta / s_length;
-    }
+    Vector2 dir = Vector2Normalize(Vector2Subtract(target, enemy->position));
+    enemy->position = Vector2Add(enemy->position, Vector2Scale(dir, ENEMY_SPEED * delta));
 
-    if (fabsf(enemy->position.t - target.t) < 0.01f) {
+    if (Vector2Equals(enemy->position, target)) {
         // made it to target
         enemy->destination_request_time = now;
 
         --enemy->target;
         if (enemy->target == -1) {
-            enemy->position.t = target.t;
-        } else {
-            Geo_Position next_target = enemy->path.items[enemy->target];
-            enemy->position.s = next_target.s;
-            enemy->position.t = 1.f - next_target.t;
+            enemy->position = enemy->destination;
         }
     }
 }
 
-void enemy_draw(Enemy *enemy, Floor_Segment *segments) {
-    Vector2 position = gpos_to_vec2(enemy->position, segments);
-
-    Vector2 target;
-    if (enemy->target != -1) {
-        target = gpos_to_vec2(enemy->path.items[enemy->target], segments);
-    } else {
-        target = position;
-    }
+void enemy_draw(Enemy *enemy) {
+    Vector2 position = enemy->position;
 
     Rectangle enemy_rect = (Rectangle){
         .x = position.x - ENEMY_WIDTH / 2,
@@ -65,14 +50,12 @@ void enemy_draw(Enemy *enemy, Floor_Segment *segments) {
         .height = ENEMY_HEIGHT
     };
 
-    DrawLineEx(position, target, 1.5f, YELLOW);
-
     DrawRectangleRec(enemy_rect, ENEMY_COLOR);
     DrawCircleV(position, 2.f, LIME);
 }
 
-bool enemy_find_path_to(Enemy *enemy, Geo_Position destination, Level_Geometry *level) {
-    Vec_Geo_Position new_path = level_geometry_pathfind(
+bool enemy_find_path_to(Enemy *enemy, Vector2 destination, Level_Geometry *level) {
+    Vec_Vector2 new_path = level_geometry_pathfind(
         level,
         enemy->position,
         destination
@@ -90,16 +73,15 @@ bool enemy_find_path_to(Enemy *enemy, Geo_Position destination, Level_Geometry *
 }
 
 #ifdef DEBUG
-void enemy_draw_path(Enemy *enemy, Floor_Segment *segments) {
+void enemy_draw_path(Enemy *enemy) {
     for (size_t i = 0; i < enemy->path.count; ++i) {
-        Geo_Position target = enemy->path.items[i];
-        Vector2 target_position = gpos_to_vec2(target, segments);
+        Vector2 target = enemy->path.items[i];
 
-        DrawCircleV(target_position, 10.f, YELLOW);
+        DrawCircleV(target, 10.f, YELLOW);
         
         char index_str[4];
         snprintf(index_str, sizeof(index_str), "%lu", enemy->path.count - i);
-        DrawText(index_str, target_position.x, target_position.y, 10, BLACK);
+        DrawText(index_str, target.x, target.y, 10, BLACK);
     }
 }
 #endif

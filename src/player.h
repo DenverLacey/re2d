@@ -12,11 +12,13 @@
 #define PLAYER_SPEED 350.f
 
 typedef struct {
-    Geo_Position position;
+    bool falling;
+    Vector2 position;
+    Floor current_floor;
 } Player;
 
 void player_poll_input(Input *input, Camera2D camera);
 void player_update(Player *player, Input *input, Level_Geometry *level);
-void player_draw(Player *player, Floor_Segment *segments);
+void player_draw(Player *player);
 
 #endif

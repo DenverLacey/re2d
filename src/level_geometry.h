@@ -5,7 +5,9 @@
 
 #include "raylib.h"
 
+#include "view.h"
 #include "vec.h"
+#include "utils.h"
 
 typedef enum {
     CONN_UP,
@@ -23,9 +25,9 @@ typedef struct {
             int down;
             int fall;
         };
-        int connections[4];
+        int connections[CONN_COUNT];
     };
-} Segment_Joint;
+} Connections;
 
 typedef enum {
     JOINT_LEFT,
@@ -34,24 +36,21 @@ typedef enum {
 } Joint_Index;
 
 typedef struct {
-    Vector2 left, right;
+    Vector2 position;
     union {
-        struct { Segment_Joint left, right; } joint;
-        Segment_Joint joints[2];
+        Connections connections[JOINT_COUNT];
+        int all_connections[CONN_COUNT * JOINT_COUNT];
     };
-} Floor_Segment;
+} Geometry_Joint;
 
 typedef struct {
-    int s;   // segment
-    float t; // amount along segment (0-1)
-} Geo_Position;
-
-DEFINE_VEC_FOR_TYPE(Geo_Position);
+    Geometry_Joint *left;
+    Geometry_Joint *right;
+} Floor;
 
 #define PATHFIND_NODE_NEIGHBOUR_COUNT ((CONN_COUNT) * 2)
 
 typedef struct Pathfind_Node {
-    Geo_Position position;
     Vector2 vposition;
     float g_score;
     float h_score;
@@ -66,42 +65,32 @@ DEFINE_VEC_FOR_TYPE_WITH_NAME(Pathfind_Node *, Pathfind_Node_Ptr);
 typedef struct {
     size_t num_nodes;
     Pathfind_Node *nodes;
-    size_t node_map_size;
-    int *node_map;
 } Pathfinding;
 
 typedef struct {
     Vector2 min_extents;
     Vector2 max_extents;
-    size_t num_segments;
-    Floor_Segment *segments;
+    size_t num_joints;
+    Geometry_Joint *joints;
     Pathfinding pathfinding;
 } Level_Geometry;
 
 typedef struct {
     bool falling;
-    Geo_Position desired_position;
+    Vector2 desired_position;
+    Floor new_floor;
 } Floor_Movement;
-
-typedef struct {
-    int floor_segment;
-    Vector2 clamped_position;
-} Clamped_Position;
-
-Geo_Position gpos(int s, float t);
-Vector2 gpos_to_vec2(Geo_Position pos, Floor_Segment *segments);
 
 bool pathfind_node_is_neighbours_with(Pathfind_Node *node, Pathfind_Node *neighbours);
 
-int pathfinding_hash_position(Geo_Position position);
-Pathfind_Node *pathfinding_get_node(Pathfinding *p, Geo_Position position);
+Level_Geometry level_geometry_make(size_t num_joints, Geometry_Joint *joints);
+Floor_Movement calculate_floor_movement(Level_Geometry *level, Vector2 player_position, Floor player_current_floor, Vector2 player_movement);
+Vec_Vector2 level_geometry_pathfind(Level_Geometry *level, Vector2 start, Vector2 end);
 
-Level_Geometry level_geometry_make(size_t num_segments, Floor_Segment *segments);
-Floor_Movement calculate_floor_movement(size_t num_segments, Floor_Segment *segments, Geo_Position player_position, Vector2 player_movement);
-Geo_Position vec2_to_closest_gpos(Vector2 v, size_t num_segments, Floor_Segment *segments);
-Vec_Geo_Position level_geometry_pathfind(Level_Geometry *level, Geo_Position start, Geo_Position end);
-
-float segment_length(Floor_Segment *s);
+Floor floor_make(Geometry_Joint *a, Geometry_Joint *b);
+bool floor_is_flat(Floor floor);
+bool floor_contains_point(Floor floor, Vector2 point);
+Floor level_find_floor(Level_Geometry *level, Vector2 position);
 
 #ifdef DEBUG
 void level_geometry_draw_gizmos(Level_Geometry *level);

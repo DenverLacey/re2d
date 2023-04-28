@@ -13,6 +13,6 @@ typedef struct {
     Vector2 point;
 } Collision;
 
-Collision collision_player_vs_floor_segment(Vector2 player, Floor_Segment seg);
+// Collision collision_player_vs_floor_segment(Vector2 player, Floor_Segment seg);
 
 #endif

@@ -74,131 +74,153 @@ int main(int argc, const char **argv) {
 
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "The Game");
 
-    Floor_Segment segments[] = {
-        // ground 1
-        (Floor_Segment){
-            .left = vec2(0.f, WINDOW_HEIGHT / 2),
-            .right = vec2(1000.f, WINDOW_HEIGHT / 2),
-            .joint.left = (Segment_Joint){
-                .up = -1,
-                .straight = -1,
-                .down = -1,
-                .fall = -1
-            },
-            .joint.right = (Segment_Joint){
-                .up = -1,
-                .straight = 1,
-                .down = 3,
-                .fall = -1,
+    Geometry_Joint joints[] = {
+        [0] = (Geometry_Joint){
+            .position = vec2(0.f, WINDOW_HEIGHT / 2),
+            .connections = {
+                [JOINT_LEFT] = (Connections){
+                    .up = -1,
+                    .straight = -1,
+                    .down = -1,
+                    .fall = -1
+                },
+                [JOINT_RIGHT] = (Connections){
+                    .up = -1,
+                    .straight = 1,
+                    .down = -1,
+                    .fall = -1
+                }
             }
         },
-        // ground 2
-        (Floor_Segment){
-            .left = vec2(1000.f, WINDOW_HEIGHT / 2),
-            .right = vec2(1500.f, WINDOW_HEIGHT / 2),
-            .joint.left = (Segment_Joint){
-                .up = -1,
-                .straight = 0,
-                .down = -1,
-                .fall = -1
-            },
-            .joint.right = (Segment_Joint){
-                .up = -1,
-                .straight = 2,
-                .down = -1,
-                .fall = -1
+        [1] = (Geometry_Joint){
+            .position = vec2(1000.f, WINDOW_HEIGHT / 2),
+            .connections = {
+                [JOINT_LEFT] = (Connections){
+                    .up = -1,
+                    .straight = 0,
+                    .down = -1,
+                    .fall = -1
+                },
+                [JOINT_RIGHT] = (Connections){
+                    .up = -1,
+                    .straight = 2,
+                    .down = 4,
+                    .fall = -1
+                }
             }
         },
-        // ramp
-        (Floor_Segment){
-            .left = vec2(1500.f, WINDOW_HEIGHT / 2),
-            .right = vec2(1750.f, WINDOW_HEIGHT / 2 + 100),
-            .joint.left = (Segment_Joint){
-                .up = -1,
-                .straight = 1,
-                .down = -1,
-                .fall = -1
-            },
-            .joint.right = (Segment_Joint){
-                .up = -1,
-                .straight = -1,
-                .down = -1,
-                .fall = -1
+        [2] = (Geometry_Joint){
+            .position = vec2(1500.f, WINDOW_HEIGHT / 2),
+            .connections = {
+                [JOINT_LEFT] = (Connections){
+                    .up = -1,
+                    .straight = 1,
+                    .down = -1,
+                    .fall = -1
+                },
+                [JOINT_RIGHT] = (Connections){
+                    .up = -1,
+                    .straight = 3,
+                    .down = -1,
+                    .fall = -1
+                }
             }
         },
-        // stairs 1
-        (Floor_Segment){
-            .left = vec2(1000.f, WINDOW_HEIGHT / 2),
-            .right = vec2(1400, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
-            .joint.left = (Segment_Joint){
-                .up = -1,
-                .straight = 0,
-                .down = -1,
-                .fall = -1,
-            },
-            .joint.right = (Segment_Joint){
-                .up = -1,
-                .straight = 4,
-                .down = -1,
-                .fall = -1
+        [3] = (Geometry_Joint){
+            .position = vec2(1750.f, WINDOW_HEIGHT / 2 + 100),
+            .connections = {
+                [JOINT_LEFT] = (Connections){
+                    .up = -1,
+                    .straight = 2,
+                    .down = -1,
+                    .fall = -1
+                },
+                [JOINT_RIGHT] = (Connections){
+                    .up = -1,
+                    .straight = -1,
+                    .down = -1,
+                    .fall = -1
+                }
             }
         },
-        // ground 3
-        (Floor_Segment){
-            .left = vec2(1400, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
-            .right = vec2(2000, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
-            .joint.left = (Segment_Joint){
-                .up = 3,
-                .straight = 5,
-                .down = -1,
-                .fall = -1
-            },
-            .joint.right = (Segment_Joint){
-                .up = -1,
-                .straight = -1,
-                .down = -1,
-                .fall = -1
+        [4] = (Geometry_Joint){
+            .position = vec2(1400, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
+            .connections = {
+                [JOINT_LEFT] = (Connections){
+                    .up = 1,
+                    .straight = 5,
+                    .down = -1,
+                    .fall = -1
+                },
+                [JOINT_RIGHT] = (Connections){
+                    .up = -1,
+                    .straight = 6,
+                    .down = -1,
+                    .fall = -1
+                }
             }
         },
-        // ground 4
-        (Floor_Segment){
-            .left = vec2(0.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
-            .right = vec2(1400, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
-            .joint.left = (Segment_Joint){
-                .up = -1,
-                .straight = -1,
-                .down = -1,
-                .fall = -1
-            },
-            .joint.right = (Segment_Joint){
-                .up = -1,
-                .straight = 4,
-                .down = -1,
-                .fall = -1
+        [5] = (Geometry_Joint){
+            .position = vec2(0.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
+            .connections = {
+                [JOINT_LEFT] = (Connections){
+                    .up = -1,
+                    .straight = -1,
+                    .down = -1,
+                    .fall = -1
+                },
+                [JOINT_RIGHT] = (Connections){
+                    .up = -1,
+                    .straight = 4,
+                    .down = -1,
+                    .fall = -1
+                }
+            }
+        },
+        [6] = (Geometry_Joint){
+            .position = vec2(2000, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
+            .connections = {
+                [JOINT_LEFT] = (Connections){
+                    .up = -1,
+                    .straight = 4,
+                    .down = -1,
+                    .fall = -1,
+                },
+                [JOINT_RIGHT] = (Connections){
+                    .up = -1,
+                    .straight = -1,
+                    .down = -1,
+                    .fall = -1
+                }
             }
         }
     };
 
-    Level_Geometry level = level_geometry_make(sizeof(segments) / sizeof(segments[0]), segments);
+    Level_Geometry level = level_geometry_make(sizeof(joints) / sizeof(joints[0]), joints);
 
+    Vector2 player_start_position = lerpv(level.joints[0].position, level.joints[1].position, 0.5f);
     Player player = (Player){
-        .position = gpos(0, 0.5f)
+        .falling = false,
+        .position = player_start_position,
+        .current_floor = level_find_floor(&level, player_start_position)
     };
 
     Camera2D world_camera;
-    world_camera.target = gpos_to_vec2(player.position, level.segments);
+    world_camera.target = player.position;
     world_camera.rotation = 0.f;
     world_camera.offset.x = WINDOW_WIDTH / 2;
     world_camera.offset.y = WINDOW_HEIGHT / 2;
     world_camera.zoom = 0.9f;
 
+    Vector2 enemy_start_position = lerpv(level.joints[4].position, level.joints[5].position, 0.5f);
 
     Vec_Enemy enemies = {0};
     vec_append(&enemies, (Enemy){
-        .position = gpos(5, 0.1f)
+        .position = enemy_start_position
     });
 
-    enemy_find_path_to(&enemies.items[0], gpos(2, 0.5f), &level);
+    Vector2 enemy_desitnation = lerpv(level.joints[2].position, level.joints[3].position, 0.5f);
+    enemy_find_path_to(&enemies.items[0], enemy_desitnation, &level);
 
     Input input;
 
@@ -222,8 +244,7 @@ int main(int argc, const char **argv) {
 #endif
 
         // Late Update ========================================================
-        Vector2 player_position = gpos_to_vec2(player.position, level.segments);
-        update_camera(&world_camera, player_position, level.min_extents, level.max_extents, input.delta_time);
+        update_camera(&world_camera, player.position, level.min_extents, level.max_extents, input.delta_time);
 
         // Draw ===============================================================
         ClearBackground(WHITE);
@@ -238,20 +259,20 @@ int main(int argc, const char **argv) {
 
                 for (size_t i = 0; i < enemies.count; ++i) {
                     Enemy *e = &enemies.items[i];
-                    enemy_draw(e, level.segments);
+                    enemy_draw(e);
                     #if defined(DEBUG) && DRAW_GIZMOS
-                        enemy_draw_path(e, level.segments);
+                        enemy_draw_path(e);
                     #endif
                 }
 
                 if (input_is_flags_set(&input, Input_Flags_AIMING)) {
-                    Vector2 origin = Vector2Add(player_position, BULLET_ORIGIN_OFFSET);
+                    Vector2 origin = Vector2Add(player.position, BULLET_ORIGIN_OFFSET);
                     Vector2 aiming_position = GetScreenToWorld2D(input.mouse_position, world_camera);
                     DrawLineEx(origin, aiming_position, 1.5f, RED);
                     DrawCircleV(aiming_position, 2.f, RED);
                 }
 
-                player_draw(&player, level.segments);
+                player_draw(&player);
             }
             EndMode2D();
 
