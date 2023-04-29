@@ -10,8 +10,6 @@
 #include "level_geometry.h"
 #include "utils.h"
 
-#include "view.h"
-
 #define DRAW_GIZMOS 1
 
 #define WINDOW_WIDTH 1280

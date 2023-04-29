@@ -89,41 +89,32 @@ Level_Geometry level_geometry_make(size_t num_joints, Geometry_Joint *joints) {
     };
 }
 
-// static Floor_Movement calculate_floor_movement_across_joint(
-//     View_Floor_Segment segments,
-//     Vector2 player_position,
-//     Vector2 player_movement,
-//     Segment_Joint joint)
-// {
-//     Floor_Movement result = {0};
+static Floor_Movement finalize_movement(Vector2 player_position, Floor floor) {
+    assert(
+        floor.left->position.x <= player_position.x &&
+        floor.right->position.x >= player_position.x
+    );
 
-//     if (player_movement.y < 0.f && joint.up != -1) {
-//         result.desired_position.s = joint.up;
-//     } else if (player_movement.y > 0.f && joint.down != -1) {
-//         result.desired_position.s = joint.down;
-//     } else if (joint.straight != -1) {
-//         result.desired_position.s = joint.straight;
-//     } else if (joint.fall != -1) {
-//         // we should fall
-//         assert(!"TODO: Falling");
-//     } else {
-//         // we shouldn't move
-//         result.falling = false;
-//         result.desired_position.s = player_position.s;
-//         result.desired_position.t = clamp(player_position.t, 0.f, 1.f);
-//         return result;
-//     }
+    float desired_y = player_position.y;
+    if (!floor_is_flat(floor)) {
+        float t = ilerp(player_position.x,
+            floor.left->position.x,
+            floor.right->position.x
+        );
 
-//     if (player_position.t < 0.f) {
-//         result.desired_position.t = 1.f - player_position.t;
-//     } else if (player_position.t > 1.f) {
-//         result.desired_position.t = player_position.t - 1.f;
-//     } else {
-//         result.desired_position.t = player_position.t;
-//     }
+        desired_y = lerp(
+            floor.left->position.y,
+            floor.right->position.y,
+            t
+        );
+    }
 
-//     return result;
-// }
+    return (Floor_Movement){
+        .falling = false,
+        .desired_position = vec2(player_position.x, desired_y),
+        .new_floor = floor
+    };
+}
 
 Floor_Movement calculate_floor_movement(
     Level_Geometry *level,
@@ -131,11 +122,45 @@ Floor_Movement calculate_floor_movement(
     Floor player_current_floor,
     Vector2 player_movement)
 {
-    return (Floor_Movement){
-        .falling = false,
-        .desired_position = player_position,
-        .new_floor = player_current_floor
-    };
+    if (player_current_floor.left->position.x <= player_position.x &&
+        player_current_floor.right->position.x >= player_position.x)
+    {
+        return finalize_movement(player_position, player_current_floor);
+    }
+
+    Geometry_Joint *joint;
+    Connections *connections;
+    if (player_movement.x < 0.f) {
+        joint = player_current_floor.left;
+        connections = &joint->connections[JOINT_LEFT];
+    } else {
+        joint = player_current_floor.right;
+        connections = &joint->connections[JOINT_RIGHT];
+    }
+
+    int conn_idx = -1;
+    if (player_movement.y < 0.f) {
+        conn_idx = connections->up;
+    } else if (player_movement.y > 0.f) {
+        conn_idx = connections->down;
+    }
+
+    // TODO: Falling
+    if (conn_idx == -1) {
+        conn_idx = connections->straight;
+    }
+
+    if (conn_idx == -1) {
+        return (Floor_Movement){
+            .falling = false,
+            .desired_position = joint->position,
+            .new_floor = player_current_floor
+        };
+    }
+
+    Geometry_Joint *conn = &level->joints[conn_idx];
+    Floor new_floor = floor_make(joint, conn);
+    return finalize_movement(player_position, new_floor);
 }
 
 bool point_is_on_line(Vector2 p, Vector2 a, Vector2 b) {
@@ -188,7 +213,7 @@ Vec_Vector2 level_geometry_pathfind(Level_Geometry *level, Vector2 start, Vector
     int starting_floor_indexes_right = starting_floor.right - level->joints;
 
     Floor ending_floor = level_find_floor(level, end);
-   assert(ending_floor.left && ending_floor.right);
+    assert(ending_floor.left && ending_floor.right);
 
     int ending_floor_indexes_left = ending_floor.left - level->joints;
     int ending_floor_indexes_right = ending_floor.right - level->joints;
@@ -217,7 +242,6 @@ Vec_Vector2 level_geometry_pathfind(Level_Geometry *level, Vector2 start, Vector
         vec_remove_ordered(&open_set, 0);
 
         if (current == end_nodes[0] || current == end_nodes[1]) {
-            TraceLog(LOG_DEBUG, "Final (%g, %g) comes from (%g, %g)", current->vposition.x, current->vposition.y, current->comes_from->vposition.x, current->comes_from->vposition.y);
             construct_path(&path, current, end);
             break;
         }
