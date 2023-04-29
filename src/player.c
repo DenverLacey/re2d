@@ -8,6 +8,9 @@
 #include "level_geometry.h"
 #include "utils.h"
 
+#define GRAVITY 500.f
+#define FALL_COMPLETION_THRESHOLD 1.f
+
 void player_poll_input(Input *input, Camera2D camera) {
     input->player_movement = (Vector2){0};
     
@@ -25,7 +28,13 @@ void player_poll_input(Input *input, Camera2D camera) {
 
 void player_update(Player *player, Input *input, Level_Geometry *level) {
     if (player->falling) {
-        assert(!"TODO: Falling");
+        player->position.y += GRAVITY * input->delta_time;
+
+        if (Vector2DistanceSqr(player->position, player->falling_position) <= FALL_COMPLETION_THRESHOLD) {
+            player->falling = false;
+            player->position = player->falling_position;
+            player->current_floor = player->falling_floor;
+        }
     } else {
         player->position.x += input->player_movement.x * PLAYER_SPEED * input->delta_time;
 
@@ -37,13 +46,15 @@ void player_update(Player *player, Input *input, Level_Geometry *level) {
         );
 
         if (movement.falling) {
-            assert(!"TODO: Falling");
+            player->falling = true;
+            player->falling_position = movement.desired_position;
+            player->falling_floor = movement.new_floor;
         } else {
             player->position = movement.desired_position;
             player->current_floor = movement.new_floor;
         }
         
-        if (input_is_flags_set(input, Input_Flags_AIMING)) {
+        if (!player->falling && input_is_flags_set(input, Input_Flags_AIMING)) {
             Vector2 aim_position = input->aim_position;
             // TODO: Check for collision with shootable object
         }

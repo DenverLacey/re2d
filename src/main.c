@@ -28,7 +28,7 @@
 #define BULLET_SIZE 4
 #define BULLET_SPEED 4000
 #define BULLET_ALIVE_TIME_SECS 0.5
-#define BULLET_ORIGIN_OFFSET (Vector2){ .x = 0, .y = -(PLAYER_HEIGHT * 0.25f) }
+#define BULLET_ORIGIN_OFFSET (Vector2){ .x = 0, .y = -(PLAYER_HEIGHT * 0.65f) }
 #define BULLET_COLOR DARKGRAY
 
 #define vec2_print(str, v2) snprintf(str, sizeof(str), "(%f, %f)", (v2).x, (v2).y)
@@ -137,7 +137,7 @@ int main(int argc, const char **argv) {
                     .up = -1,
                     .straight = -1,
                     .down = -1,
-                    .fall = -1
+                    .fall = 6
                 }
             }
         },
@@ -176,13 +176,30 @@ int main(int argc, const char **argv) {
             }
         },
         [6] = (Geometry_Joint){
-            .position = vec2(2000, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
+            .position = vec2(1750.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
             .connections = {
                 [JOINT_LEFT] = (Connections){
                     .up = -1,
                     .straight = 4,
                     .down = -1,
                     .fall = -1,
+                },
+                [JOINT_RIGHT] = (Connections){
+                    .up = -1,
+                    .straight = 7,
+                    .down = -1,
+                    .fall = -1
+                }
+            }
+        },
+        [7] = (Geometry_Joint){
+            .position = vec2(2000.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
+            .connections = {
+                [JOINT_LEFT] = (Connections){
+                    .up = -1,
+                    .straight = 6,
+                    .down = -1,
+                    .fall = -1
                 },
                 [JOINT_RIGHT] = (Connections){
                     .up = -1,

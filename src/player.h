@@ -9,12 +9,14 @@
 #define PLAYER_WIDTH 25.f
 #define PLAYER_HEIGHT 100.f
 #define PLAYER_COLOR BLACK
-#define PLAYER_SPEED 350.f
+#define PLAYER_SPEED 300.f
 
 typedef struct {
     bool falling;
     Vector2 position;
     Floor current_floor;
+    Vector2 falling_position;
+    Floor falling_floor;
 } Player;
 
 void player_poll_input(Input *input, Camera2D camera);

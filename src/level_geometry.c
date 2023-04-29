@@ -95,7 +95,7 @@ static Floor_Movement finalize_movement(Vector2 player_position, Floor floor) {
         floor.right->position.x >= player_position.x
     );
 
-    float desired_y = player_position.y;
+    float desired_y = floor.left->position.y;
     if (!floor_is_flat(floor)) {
         float t = ilerp(player_position.x,
             floor.left->position.x,
@@ -145,9 +145,26 @@ Floor_Movement calculate_floor_movement(
         conn_idx = connections->down;
     }
 
-    // TODO: Falling
     if (conn_idx == -1) {
         conn_idx = connections->straight;
+    }
+
+    if (conn_idx == -1 && connections->fall != -1) {
+        conn_idx = connections->fall;
+        Geometry_Joint *conn = &level->joints[conn_idx];
+        Geometry_Joint *other = 
+            conn->connections[JOINT_LEFT].straight != -1 ? &level->joints[conn->connections[JOINT_LEFT].straight] :
+            conn->connections[JOINT_RIGHT].straight != -1 ? &level->joints[conn->connections[JOINT_RIGHT].straight] :
+            NULL;
+        assert(other);
+
+        Floor new_floor = floor_make(conn, other);
+
+        return (Floor_Movement){
+            .falling = true,
+            .desired_position = conn->position,
+            .new_floor = new_floor
+        };
     }
 
     if (conn_idx == -1) {
