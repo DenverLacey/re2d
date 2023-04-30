@@ -4,11 +4,14 @@
 
 #include "raymath.h"
 
+#define PATH_TARGET_COMPLETION_THRESHOLD 0.75f
+
 void enemy_update(Enemy *enemy, Level_Geometry *level, float delta) {
     double now = GetTime();
     if ((now - enemy->destination_request_time >= ENEMY_PATHING_WAIT_TIME_SECS) &&
         (enemy->target == -1))
     {
+        vec_free(&enemy->path);
         return;
         // TODO: Find new destination
         TraceLog(LOG_DEBUG, "HERE: PATHFIND!!!");
@@ -29,7 +32,7 @@ void enemy_update(Enemy *enemy, Level_Geometry *level, float delta) {
     Vector2 dir = Vector2Normalize(Vector2Subtract(target, enemy->position));
     enemy->position = Vector2Add(enemy->position, Vector2Scale(dir, ENEMY_SPEED * delta));
 
-    if (Vector2Equals(enemy->position, target)) {
+    if (Vector2DistanceSqr(enemy->position, target) <= PATH_TARGET_COMPLETION_THRESHOLD) {
         // made it to target
         enemy->destination_request_time = now;
 
@@ -74,6 +77,15 @@ bool enemy_find_path_to(Enemy *enemy, Vector2 destination, Level_Geometry *level
 
 #ifdef DEBUG
 void enemy_draw_path(Enemy *enemy) {
+    if (enemy->target > -1) {
+        DrawLineEx(enemy->position, enemy->path.items[enemy->target], 1.f, YELLOW);
+        for (int i = enemy->target - 1; i >= 0; --i) {
+            Vector2 a = enemy->path.items[i + 1];
+            Vector2 b = enemy->path.items[i];
+            DrawLineEx(a, b, 1.f, YELLOW);
+        }
+    }
+
     for (size_t i = 0; i < enemy->path.count; ++i) {
         Vector2 target = enemy->path.items[i];
 

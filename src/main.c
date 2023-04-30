@@ -12,12 +12,9 @@
 
 #define DRAW_GIZMOS 1
 
-#define WINDOW_WIDTH 1280
-#define WINDOW_HEIGHT 720
-
 #define CAMERA_MARGIN 50.f
 #define CAMERA_MIN_SPEED 30.f
-#define CAMERA_MIN_EFFECT_LENGTH 30.f
+#define CAMERA_MIN_EFFECT_LENGTH 1.f
 #define CAMERA_FRACTION_SPEED 2.f
 
 #define CROSS_LENGTH 7
@@ -61,6 +58,11 @@ void draw_crosshair(Vector2 position, Color color) {
     DrawRectangle(position.x - CROSS_GIRTH / 2, position.y - CROSS_OFFSET - CROSS_LENGTH / 2, CROSS_GIRTH, CROSS_LENGTH, color);
     // bottom
     DrawRectangle(position.x - CROSS_GIRTH / 2, position.y + CROSS_OFFSET - CROSS_LENGTH / 2, CROSS_GIRTH, CROSS_LENGTH, color);
+}
+
+void cursor_draw(Vector2 position, Color color) {
+    // TODO: Actually draw a cursor or something
+    DrawRectangleV(position, vec2(10, 10), color);
 }
 
 int main(int argc, const char **argv) {
@@ -213,11 +215,14 @@ int main(int argc, const char **argv) {
 
     Level_Geometry level = level_geometry_make(sizeof(joints) / sizeof(joints[0]), joints);
 
+    Inventory player_inventory = {0};
+
     Vector2 player_start_position = lerpv(level.joints[0].position, level.joints[1].position, 0.5f);
     Player player = (Player){
-        .falling = false,
+        .flags = 0,
         .position = player_start_position,
-        .current_floor = level_find_floor(&level, player_start_position)
+        .current_floor = level_find_floor(&level, player_start_position),
+        .inventory = &player_inventory
     };
 
     Camera2D world_camera;
@@ -280,7 +285,7 @@ int main(int argc, const char **argv) {
                     #endif
                 }
 
-                if (input_is_flags_set(&input, Input_Flags_AIMING)) {
+                if (is_flags_set(&input.flags, Input_Flags_AIMING)) {
                     Vector2 origin = Vector2Add(player.position, BULLET_ORIGIN_OFFSET);
                     Vector2 aiming_position = GetScreenToWorld2D(input.mouse_position, world_camera);
                     DrawLineEx(origin, aiming_position, 1.5f, RED);
@@ -291,7 +296,12 @@ int main(int argc, const char **argv) {
             }
             EndMode2D();
 
-            draw_crosshair(input.mouse_position, CROSS_COLOR); // TODO: Make yellow or something when crosshair is hovering interactable
+            if (is_flags_set(&input.flags, Input_Flags_INVENTORY_OPEN)) {
+                inventory_draw(player.inventory);
+                cursor_draw(input.mouse_position, BLACK);
+            } else {
+                draw_crosshair(input.mouse_position, CROSS_COLOR); // TODO: Make yellow or something when crosshair is hovering interactable
+            }
         }
         EndDrawing();
     }

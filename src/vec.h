@@ -74,6 +74,7 @@ int vec_internal_find(size_t count, const void *items, const void *item, size_t 
     free((vec)->items);                                                                       \
     (vec)->count = 0;                                                                         \
     (vec)->allocated = 0;                                                                     \
+    (vec)->items = NULL;                                                                      \
 } while (0)
 
 #ifdef bool

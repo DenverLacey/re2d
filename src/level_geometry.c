@@ -149,7 +149,7 @@ Floor_Movement calculate_floor_movement(
         conn_idx = connections->straight;
     }
 
-    if (conn_idx == -1 && connections->fall != -1) {
+    if (conn_idx == -1 && connections->fall != -1 && player_movement.y > 0.f) {
         conn_idx = connections->fall;
         Geometry_Joint *conn = &level->joints[conn_idx];
         Geometry_Joint *other = 
@@ -363,6 +363,8 @@ void level_geometry_draw_gizmos(Level_Geometry *level) {
         //       another `Geometry_Joint`.
         for (int c = 0; c < CONN_COUNT; ++c) {
             int conn_idx = joint->connections[JOINT_RIGHT].connections[c];
+            if (conn_idx == -1) continue;
+
             Geometry_Joint *connection = &level->joints[conn_idx];
             DrawLineEx(joint->position, connection->position, 1.f, GRAY);
         }
