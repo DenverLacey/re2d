@@ -74,6 +74,8 @@ int main(int argc, const char **argv) {
 
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "The Game");
 
+    SetTargetFPS(120);
+
     Geometry_Joint joints[] = {
         [0] = (Geometry_Joint){
             .position = vec2(0.f, WINDOW_HEIGHT / 2),
@@ -216,7 +218,6 @@ int main(int argc, const char **argv) {
     Level_Geometry level = level_geometry_make(sizeof(joints) / sizeof(joints[0]), joints);
 
     Inventory player_inventory = {0};
-
     Vector2 player_start_position = lerpv(level.joints[0].position, level.joints[1].position, 0.5f);
     Player player = (Player){
         .flags = 0,
@@ -230,7 +231,7 @@ int main(int argc, const char **argv) {
     world_camera.rotation = 0.f;
     world_camera.offset.x = WINDOW_WIDTH / 2;
     world_camera.offset.y = WINDOW_HEIGHT / 2;
-    world_camera.zoom = 0.9f;
+    world_camera.zoom = 1.f;
 
     Vector2 enemy_start_position = lerpv(level.joints[4].position, level.joints[5].position, 0.5f);
 
@@ -285,7 +286,7 @@ int main(int argc, const char **argv) {
                     #endif
                 }
 
-                if (is_flags_set(&input.flags, Input_Flags_AIMING)) {
+                if (is_flags_set(input.flags, Input_Flags_AIMING)) {
                     Vector2 origin = Vector2Add(player.position, BULLET_ORIGIN_OFFSET);
                     Vector2 aiming_position = GetScreenToWorld2D(input.mouse_position, world_camera);
                     DrawLineEx(origin, aiming_position, 1.5f, RED);
@@ -296,12 +297,16 @@ int main(int argc, const char **argv) {
             }
             EndMode2D();
 
-            if (is_flags_set(&input.flags, Input_Flags_INVENTORY_OPEN)) {
+            if (is_flags_set(input.flags, Input_Flags_INVENTORY_OPEN)) {
                 inventory_draw(player.inventory);
                 cursor_draw(input.mouse_position, BLACK);
             } else {
                 draw_crosshair(input.mouse_position, CROSS_COLOR); // TODO: Make yellow or something when crosshair is hovering interactable
             }
+
+            #ifdef DEBUG
+                DrawFPS(30, 30);
+            #endif
         }
         EndDrawing();
     }

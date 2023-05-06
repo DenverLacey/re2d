@@ -33,11 +33,10 @@ void enemy_update(Enemy *enemy, Level_Geometry *level, float delta) {
     enemy->position = Vector2Add(enemy->position, Vector2Scale(dir, ENEMY_SPEED * delta));
 
     if (Vector2DistanceSqr(enemy->position, target) <= PATH_TARGET_COMPLETION_THRESHOLD) {
-        // made it to target
-        enemy->destination_request_time = now;
-
         --enemy->target;
         if (enemy->target == -1) {
+            // made it to destination
+            enemy->destination_request_time = now;
             enemy->position = enemy->destination;
         }
     }

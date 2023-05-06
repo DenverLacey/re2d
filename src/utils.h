@@ -24,6 +24,6 @@ DEFINE_VEC_FOR_TYPE(Vector2);
 void set_flags(int *input, int flags);
 void unset_flags(int *input, int flags);
 void set_flags_if(int *input, bool condition, int flags);
-bool is_flags_set(int *input, int flags);
+bool is_flags_set(int input, int flags);
 
 #endif

@@ -58,6 +58,6 @@ void set_flags_if(int *input, bool condition, int flags) {
     }
 }
 
-bool is_flags_set(int *input, int flags) {
-    return (*input & flags) == flags;
+bool is_flags_set(int input, int flags) {
+    return (input & flags) == flags;
 }

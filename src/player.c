@@ -17,7 +17,7 @@ void player_poll_input(Input *input, Camera2D camera) {
     set_flags_if(&input->flags, IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT), Input_Flags_AIMING);
 
     if (IsKeyPressed(KEY_I)) {
-        if (is_flags_set(&input->flags, Input_Flags_INVENTORY_OPEN)) {
+        if (is_flags_set(input->flags, Input_Flags_INVENTORY_OPEN)) {
             unset_flags(&input->flags, Input_Flags_INVENTORY_OPEN);
         TraceLog(LOG_DEBUG, "UNSET");
         } else {
@@ -26,8 +26,8 @@ void player_poll_input(Input *input, Camera2D camera) {
         }
     }
 
-    if (!is_flags_set(&input->flags, Input_Flags_AIMING) &&
-        !is_flags_set(&input->flags, Input_Flags_INVENTORY_OPEN))
+    if (!is_flags_set(input->flags, Input_Flags_AIMING) &&
+        !is_flags_set(input->flags, Input_Flags_INVENTORY_OPEN))
     {
         if (IsKeyDown(KEY_W)) input->player_movement.y -= 1;
         if (IsKeyDown(KEY_A)) input->player_movement.x -= 1;
@@ -39,10 +39,11 @@ void player_poll_input(Input *input, Camera2D camera) {
 }
 
 void player_update(Player *player, Input *input, Level_Geometry *level) {
-    if (is_flags_set(&player->flags, Player_Flags_FALLING)) {
+    if (is_flags_set(player->flags, Player_Flags_FALLING)) {
+        player->position.x = lerp(player->position.x, player->falling_position.x, 0.1f);
         player->position.y += GRAVITY * input->delta_time;
 
-        if (Vector2DistanceSqr(player->position, player->falling_position) <= FALL_COMPLETION_THRESHOLD) {
+        if (player->position.y >= player->falling_position.y) {
             unset_flags(&player->flags, Player_Flags_FALLING);
             player->position = player->falling_position;
             player->current_floor = player->falling_floor;
@@ -66,8 +67,8 @@ void player_update(Player *player, Input *input, Level_Geometry *level) {
             player->current_floor = movement.new_floor;
         }
         
-        if (!is_flags_set(&player->flags, Player_Flags_FALLING) &&
-            is_flags_set(&input->flags, Input_Flags_AIMING))
+        if (!is_flags_set(player->flags, Player_Flags_FALLING) &&
+            is_flags_set(input->flags, Input_Flags_AIMING))
         {
             Vector2 aim_position = input->aim_position;
             // TODO: Check for collision with shootable object

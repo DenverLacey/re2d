@@ -16,7 +16,7 @@ typedef struct {
     Vector2 position;     // current position
     Vector2 destination;  // final destination of `path`
     double destination_request_time;
-    int target;                // index of current target position in `path`
+    int target;           // index of current target position in `path`
     Vec_Vector2 path;
 } Enemy;
 
