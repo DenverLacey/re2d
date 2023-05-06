@@ -66,8 +66,8 @@ void cursor_draw(Vector2 position, Color color) {
 }
 
 int main(int argc, const char **argv) {
-    UNUNSED(argc);
-    UNUNSED(argv);
+    UNUSED(argc);
+    UNUSED(argv);
 
     #ifdef DEBUG
         SetTraceLogLevel(LOG_ALL);

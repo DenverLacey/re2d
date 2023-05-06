@@ -68,7 +68,7 @@ void player_update(Player *player, Input *input, Level_Geometry *level) {
             is_flags_set(input->flags, Input_Flags_AIMING))
         {
             Vector2 aim_position = input->aim_position;
-            UNUNSED(aim_position);
+            UNUSED(aim_position);
             // TODO: Check for collision with shootable object
         }
     }

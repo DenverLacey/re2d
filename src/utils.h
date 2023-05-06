@@ -32,6 +32,6 @@ DEFINE_VEC_FOR_TYPE(Vector2);
     }                                                                          \
 } while (0)
 
-#define UNUNSED(_x) ((void)_x)
+#define UNUSED(_x) ((void)_x)
 
 #endif
