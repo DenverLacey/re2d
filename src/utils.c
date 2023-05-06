@@ -40,24 +40,3 @@ float clamp(float a, float min, float max) {
     if (a > max) a = max;
     return a;
 }
-
-
-void set_flags(int *input, int flags) {
-    *input |= flags;
-}
-
-void unset_flags(int *input, int flags) {
-    *input &= ~flags;
-}
-
-void set_flags_if(int *input, bool condition, int flags) {
-    if (condition) {
-        set_flags(input, flags);
-    } else {
-        *input &= ~flags;
-    }
-}
-
-bool is_flags_set(int input, int flags) {
-    return (input & flags) == flags;
-}

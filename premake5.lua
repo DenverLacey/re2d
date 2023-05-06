@@ -4,7 +4,7 @@ workspace "re2d"
 project "re2d"
     kind "ConsoleApp"
     language "C"
-    cdialect "C99"
+    cdialect "C11"
 
     files { "src/*.c" }
 
@@ -18,6 +18,14 @@ project "re2d"
     }
 
     links { "raylib" }
+
+    filter "action:gmake2"
+        buildoptions {
+            "-Wpedantic",
+            "-Wall",
+            "-Wextra",
+            "-Werror"
+        }
 
     filter "configurations:debug"
         defines { "DEBUG" }

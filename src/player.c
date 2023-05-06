@@ -9,7 +9,6 @@
 #include "utils.h"
 
 #define GRAVITY 500.f
-#define FALL_COMPLETION_THRESHOLD 0.75f
 
 void player_poll_input(Input *input, Camera2D camera) {
     input->player_movement = (Vector2){0};
@@ -19,10 +18,8 @@ void player_poll_input(Input *input, Camera2D camera) {
     if (IsKeyPressed(KEY_I)) {
         if (is_flags_set(input->flags, Input_Flags_INVENTORY_OPEN)) {
             unset_flags(&input->flags, Input_Flags_INVENTORY_OPEN);
-        TraceLog(LOG_DEBUG, "UNSET");
         } else {
             set_flags(&input->flags, Input_Flags_INVENTORY_OPEN);
-        TraceLog(LOG_DEBUG, "SET");
         }
     }
 
@@ -40,7 +37,6 @@ void player_poll_input(Input *input, Camera2D camera) {
 
 void player_update(Player *player, Input *input, Level_Geometry *level) {
     if (is_flags_set(player->flags, Player_Flags_FALLING)) {
-        player->position.x = lerp(player->position.x, player->falling_position.x, 0.1f);
         player->position.y += GRAVITY * input->delta_time;
 
         if (player->position.y >= player->falling_position.y) {
@@ -60,6 +56,7 @@ void player_update(Player *player, Input *input, Level_Geometry *level) {
 
         if (movement.falling) {
             set_flags(&player->flags, Player_Flags_FALLING);
+            player->position.x = movement.desired_position.x;
             player->falling_position = movement.desired_position;
             player->falling_floor = movement.new_floor;
         } else {
@@ -71,6 +68,7 @@ void player_update(Player *player, Input *input, Level_Geometry *level) {
             is_flags_set(input->flags, Input_Flags_AIMING))
         {
             Vector2 aim_position = input->aim_position;
+            UNUNSED(aim_position);
             // TODO: Check for collision with shootable object
         }
     }

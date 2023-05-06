@@ -9,20 +9,8 @@
 #include "collisions.h"
 #include "utils.h"
 
-static int pathfinding_add_node_uniq(Vec_Pathfind_Node *nodes, Pathfind_Node node) {
-    for (size_t i = 0; i < nodes->count; ++i) {
-        Pathfind_Node *other = &nodes->items[i];
-        if (Vector2Equals(other->vposition, node.vposition)) {
-            return i;
-        }
-    }
-
-    vec_append(nodes, node);
-    return nodes->count - 1;
-}
-
 bool pathfind_node_is_neighbours_with(Pathfind_Node *node, Pathfind_Node *neighbour) {
-    for (size_t i = 0; i < node->num_neighbours; ++i) {
+    for (int i = 0; i < node->num_neighbours; ++i) {
         if (node->neighbours[i] == neighbour) {
             return true;
         }
@@ -377,7 +365,7 @@ void pathfind_geometry_draw_gizmos(Pathfinding *p) {
 
         DrawCircleV(node->vposition, 4.f, MAGENTA);
 
-        for (size_t j = 0; j < node->num_neighbours; ++j) {
+        for (int j = 0; j < node->num_neighbours; ++j) {
             Pathfind_Node *neighbour = node->neighbours[j];
             DrawLineEx(node->vposition, neighbour->vposition, 1.f, MAGENTA);
         }

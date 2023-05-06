@@ -21,9 +21,17 @@ float clamp(float a, float min, float max);
 
 DEFINE_VEC_FOR_TYPE(Vector2);
 
-void set_flags(int *input, int flags);
-void unset_flags(int *input, int flags);
-void set_flags_if(int *input, bool condition, int flags);
-bool is_flags_set(int input, int flags);
+#define is_flags_set(_in, _fl) (((_in) & (_fl)) == (_fl))
+#define set_flags(_in, _fl) (*(_in) |= (_fl))
+#define unset_flags(_in, _fl) (*(_in) &= ~(_fl))
+#define set_flags_if(_in, _cond, _fl) do {                                     \
+    if (_cond) {                                                               \
+        set_flags(_in, _fl);                                                   \
+    } else {                                                                   \
+        unset_flags(_in, _fl);                                                 \
+    }                                                                          \
+} while (0)
+
+#define UNUNSED(_x) ((void)_x)
 
 #endif
