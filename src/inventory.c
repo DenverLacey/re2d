@@ -5,33 +5,36 @@
 
 #include "raylib.h"
 
-const Object OBJECTS[] = {
-    {
-        .name = "Food"
-    },
-    {
-        .name = "Sword"
-    },
-    {
-        .name = "Shield"
-    }
-};
-
 const Item ITEMS[Item_Kind_COUNT] = {
     [Item_Kind_FOOD] = {
         .kind = Item_Kind_FOOD,
         .max_slot_size = 64,
-        .prefab = &OBJECTS[0]
+        .display_name = "Food"
     },
-    [Item_Kind_SWORD] = {
-        .kind = Item_Kind_SWORD,
+    [Item_Kind_KEY_CLUBS] = {
+        .kind = Item_Kind_KEY_CLUBS,
         .max_slot_size = 1,
-        .prefab = &OBJECTS[1]
+        .display_name = "Key (Clubs)"
     },
-    [Item_Kind_SHIELD] = {
-        .kind = Item_Kind_SHIELD,
+    [Item_Kind_KEY_DIAMONDS] = {
+        .kind = Item_Kind_KEY_DIAMONDS,
         .max_slot_size = 1,
-        .prefab = &OBJECTS[2]
+        .display_name = "Key (Diamonds)"
+    },
+    [Item_Kind_KEY_HEARTS] = {
+        .kind = Item_Kind_KEY_HEARTS,
+        .max_slot_size = 1,
+        .display_name = "Key (Hearts)"
+    },
+    [Item_Kind_KEY_SPADES] = {
+        .kind = Item_Kind_KEY_SPADES,
+        .max_slot_size = 1,
+        .display_name = "Key (Spades)"
+    },
+    [Item_Kind_WEAPON_HANDGUN] = {
+        .kind = Item_Kind_WEAPON_HANDGUN,
+        .max_slot_size = 1,
+        .display_name = "Handgun"
     }
 };
 
@@ -169,7 +172,7 @@ void inventory_draw(Inventory *inv) {
             Slot *slot = &inv->slots[i];
 
             DrawText(
-                slot->item->prefab->name,
+                slot->item->display_name,
                 slot_pos.x + INV_UI_PAD_TEXT,
                 slot_pos.y + INV_UI_PAD_TEXT,
                 INV_UI_FONT_SIZE,

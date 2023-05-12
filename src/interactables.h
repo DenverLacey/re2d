@@ -7,13 +7,36 @@ typedef enum {
     Interactable_Kind_AMMO,
     Interactable_Kind_DOCUMENT,
     Interactable_Kind_WEAPON,
+    Interactable_Kind_KEY,
     Interactable_Kind_COUNT
 } Interactable_Kind;
 
+typedef enum {
+    Ammo_Kind_HANDGUN,
+    Ammo_KIND_COUNT
+} Ammo_Kind;
+
+typedef enum {
+    Weapon_Kind_HANDGUN,
+    Weapon_Kind_COUNT
+} Weapon_Kind;
+
+typedef enum {
+    // WARNING: Key kinds must be alphabetic order. Parts of the code rely on this fact.
+    Key_Kind_CLUBS,
+    Key_Kind_DIAMONDS,
+    Key_Kind_HEARTS,
+    Key_Kind_SPADES,
+    Key_Kind_COUNT
+} Key_Kind;
+
 typedef struct {
     Interactable_Kind kind;
-    short info_index;
-    short amount;
+    int amount;
+    union {
+        int info_index;
+        int specific_kind;
+    };
 } Interactable;
 
 typedef struct {

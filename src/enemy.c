@@ -45,7 +45,7 @@ void enemy_update(Enemy *enemy, Level_Geometry *level, float delta) {
 void enemy_draw(Enemy *enemy) {
     Vector2 position = enemy->position;
 
-    Rectangle enemy_rect = (Rectangle){
+    Rectangle enemy_rect = {
         .x = position.x - ENEMY_WIDTH / 2,
         .y = position.y - ENEMY_HEIGHT,
         .width = ENEMY_WIDTH,

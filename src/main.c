@@ -80,16 +80,16 @@ int main(int argc, const char **argv) {
     SetTargetFPS(120);
 
     Geometry_Joint joints[] = {
-        [0] = (Geometry_Joint){
+        [0] = {
             .position = vec2(0.f, WINDOW_HEIGHT / 2),
             .connections = {
-                [JOINT_LEFT] = (Connections){
+                [JOINT_LEFT] = {
                     .up = -1,
                     .straight = -1,
                     .down = -1,
                     .fall = -1
                 },
-                [JOINT_RIGHT] = (Connections){
+                [JOINT_RIGHT] = {
                     .up = -1,
                     .straight = 1,
                     .down = -1,
@@ -97,16 +97,16 @@ int main(int argc, const char **argv) {
                 }
             }
         },
-        [1] = (Geometry_Joint){
+        [1] = {
             .position = vec2(1000.f, WINDOW_HEIGHT / 2),
             .connections = {
-                [JOINT_LEFT] = (Connections){
+                [JOINT_LEFT] = {
                     .up = -1,
                     .straight = 0,
                     .down = -1,
                     .fall = -1
                 },
-                [JOINT_RIGHT] = (Connections){
+                [JOINT_RIGHT] = {
                     .up = -1,
                     .straight = 2,
                     .down = 4,
@@ -114,16 +114,16 @@ int main(int argc, const char **argv) {
                 }
             }
         },
-        [2] = (Geometry_Joint){
+        [2] = {
             .position = vec2(1500.f, WINDOW_HEIGHT / 2),
             .connections = {
-                [JOINT_LEFT] = (Connections){
+                [JOINT_LEFT] = {
                     .up = -1,
                     .straight = 1,
                     .down = -1,
                     .fall = -1
                 },
-                [JOINT_RIGHT] = (Connections){
+                [JOINT_RIGHT] = {
                     .up = -1,
                     .straight = 3,
                     .down = -1,
@@ -131,16 +131,16 @@ int main(int argc, const char **argv) {
                 }
             }
         },
-        [3] = (Geometry_Joint){
+        [3] = {
             .position = vec2(1750.f, WINDOW_HEIGHT / 2 + 100),
             .connections = {
-                [JOINT_LEFT] = (Connections){
+                [JOINT_LEFT] = {
                     .up = -1,
                     .straight = 2,
                     .down = -1,
                     .fall = -1
                 },
-                [JOINT_RIGHT] = (Connections){
+                [JOINT_RIGHT] = {
                     .up = -1,
                     .straight = -1,
                     .down = -1,
@@ -148,16 +148,16 @@ int main(int argc, const char **argv) {
                 }
             }
         },
-        [4] = (Geometry_Joint){
+        [4] = {
             .position = vec2(1400, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
             .connections = {
-                [JOINT_LEFT] = (Connections){
+                [JOINT_LEFT] = {
                     .up = 1,
                     .straight = 5,
                     .down = -1,
                     .fall = -1
                 },
-                [JOINT_RIGHT] = (Connections){
+                [JOINT_RIGHT] = {
                     .up = -1,
                     .straight = 6,
                     .down = -1,
@@ -165,16 +165,16 @@ int main(int argc, const char **argv) {
                 }
             }
         },
-        [5] = (Geometry_Joint){
+        [5] = {
             .position = vec2(0.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
             .connections = {
-                [JOINT_LEFT] = (Connections){
+                [JOINT_LEFT] = {
                     .up = -1,
                     .straight = -1,
                     .down = -1,
                     .fall = -1
                 },
-                [JOINT_RIGHT] = (Connections){
+                [JOINT_RIGHT] = {
                     .up = -1,
                     .straight = 4,
                     .down = -1,
@@ -182,16 +182,16 @@ int main(int argc, const char **argv) {
                 }
             }
         },
-        [6] = (Geometry_Joint){
+        [6] = {
             .position = vec2(1750.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
             .connections = {
-                [JOINT_LEFT] = (Connections){
+                [JOINT_LEFT] = {
                     .up = -1,
                     .straight = 4,
                     .down = -1,
                     .fall = -1,
                 },
-                [JOINT_RIGHT] = (Connections){
+                [JOINT_RIGHT] = {
                     .up = -1,
                     .straight = 7,
                     .down = -1,
@@ -199,16 +199,16 @@ int main(int argc, const char **argv) {
                 }
             }
         },
-        [7] = (Geometry_Joint){
+        [7] = {
             .position = vec2(2000.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
             .connections = {
-                [JOINT_LEFT] = (Connections){
+                [JOINT_LEFT] = {
                     .up = -1,
                     .straight = 6,
                     .down = -1,
                     .fall = -1
                 },
-                [JOINT_RIGHT] = (Connections){
+                [JOINT_RIGHT] = {
                     .up = -1,
                     .straight = -1,
                     .down = -1,
@@ -220,25 +220,50 @@ int main(int argc, const char **argv) {
 
     Level_Geometry level = level_geometry_make(sizeof(joints) / sizeof(joints[0]), joints);
 
-    Level_Interactable_Object interactables[] = {
-        (Level_Interactable_Object){
+    Level_Object_Interactable interactables[] = {
+        {
             .position = vec2(1600.f, WINDOW_HEIGHT / 2),
-            .interactable = (Interactable){
+            .interactable = {
                 .kind = Interactable_Kind_DOCUMENT,
                 .info_index = 0
+            },
+            .interacted = false
+        },
+        {
+            .position = vec2(750.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 280),
+            .interactable = {
+                .kind = Interactable_Kind_AMMO,
+                .specific_kind = Ammo_Kind_HANDGUN,
+                .amount = 6
+            },
+            .interacted = false
+        },
+        {
+            .position = vec2(1800.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 280),
+            .interactable = {
+                .kind = Interactable_Kind_KEY,
+                .specific_kind = Key_Kind_CLUBS
+            },
+            .interacted = false
+        },
+        {
+            .position = vec2(1350.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 150),
+            .interactable = {
+                .kind = Interactable_Kind_WEAPON,
+                .specific_kind = Weapon_Kind_HANDGUN
             },
             .interacted = false
         }
     };
 
-    Level_Interactables level_interactables = (Level_Interactables){
+    Level_Interactables level_interactables = {
         .num_objects = sizeof(interactables) / sizeof(interactables[0]),
         .objects = interactables
     };
 
     Inventory player_inventory = {0};
     Vector2 player_start_position = lerpv(level.joints[0].position, level.joints[1].position, 0.5f);
-    Player player = (Player){
+    Player player = {
         .flags = 0,
         .position = player_start_position,
         .current_floor = level_find_floor(&level, player_start_position),
@@ -303,7 +328,7 @@ int main(int argc, const char **argv) {
                     pathfind_geometry_draw_gizmos(&level.pathfinding);
                 #endif
 
-                level_interactables_draw(&level_interactables);
+                level_interactables_draw(&level_interactables, player.position, input.mouse_world_position);
 
                 vec_foreach(Enemy, e, enemies) {
                     enemy_draw(e);

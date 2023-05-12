@@ -335,7 +335,7 @@ Floor level_find_floor(Level_Geometry *level, Vector2 position) {
 #ifdef DEBUG
 
 void level_geometry_draw_gizmos(Level_Geometry *level) {
-    Rectangle level_rect = (Rectangle){
+    Rectangle level_rect = {
         .x = level->min_extents.x,
         .y = level->min_extents.y,
         .width = level->max_extents.x - level->min_extents.y,

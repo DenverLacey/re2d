@@ -34,7 +34,9 @@ DEFINE_VEC_FOR_TYPE(Vector2);
 
 #define UNUSED(_x) ((void)_x)
 
-#define TODO(__msg) (assert(!"TODO" __msg))
+#define DO_STRINGIFY(__x) #__x
+#define STRINGIFY(__x) DO_STRINGIFY(__x)
+#define TODO(...) (TraceLog(LOG_NONE, __FILE__ ":" STRINGIFY(__LINE__) ": TODO: " __VA_ARGS__))
 
 #ifdef __GNUC__ // GCC, Clang, ICC
 

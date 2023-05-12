@@ -10,15 +10,15 @@ typedef struct {
     Interactable interactable;
     Vector2 position;
     bool interacted;
-} Level_Interactable_Object;
+} Level_Object_Interactable;
 
 typedef struct {
     size_t num_objects;
-    Level_Interactable_Object *objects;
+    Level_Object_Interactable *objects;
 } Level_Interactables;
 
-Level_Interactable_Object *get_interactable_at_position(Level_Interactables *level, Vector2 position);
+Level_Object_Interactable *get_interactable_at_position(Level_Interactables *level, Vector2 position);
 
-void level_interactables_draw(Level_Interactables *level);
+void level_interactables_draw(Level_Interactables *level, Vector2 player_position, Vector2 mouse_world_position);
 
 #endif

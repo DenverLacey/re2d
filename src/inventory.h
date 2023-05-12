@@ -26,23 +26,22 @@
 #define INV_UI_PAD_TEXT_SLOT_SIZE_Y 5
 #define INV_UI_PAD_HOVER 5
 
-typedef struct {
-    const char *name;
-} Object;
-
-extern const Object OBJECTS[3];
-
 typedef enum {
     Item_Kind_FOOD,
-    Item_Kind_SWORD,
-    Item_Kind_SHIELD,
-    Item_Kind_COUNT,
+    // WARNING: Key kinds must be in alphabetical order. Parts of the code rely on this fact.
+    Item_Kind_KEY_CLUBS,
+    Item_Kind_KEY_DIAMONDS,
+    Item_Kind_KEY_HEARTS,
+    Item_Kind_KEY_SPADES,
+    // WARNING: Weapon kinds must be in alphabetical order. Parts of the code rely on this fact.
+    Item_Kind_WEAPON_HANDGUN,
+    Item_Kind_COUNT
 } Item_Kind;
 
 typedef struct {
     Item_Kind kind;
     int max_slot_size;
-    const Object *prefab;
+    const char *display_name;
 } Item;
 
 extern const Item ITEMS[Item_Kind_COUNT];

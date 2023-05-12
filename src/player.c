@@ -73,27 +73,37 @@ void player_update_aiming(Player *player, Input *input, Level_Interactables *lev
 
     if (is_flags_set(input->flags, Input_Flags_AIMING)) {
         // TODO: Check for collision with shootable object
-    } else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        Level_Interactable_Object *interactable_object = get_interactable_at_position(level, input->mouse_world_position);
+    } else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) &&
+               Vector2Distance(player->position, input->mouse_world_position) < MAX_PICKUP_DISTANCE)
+    {
+        Level_Object_Interactable *interactable_object = get_interactable_at_position(level, input->mouse_world_position);
 
         if (interactable_object) {
             Interactable *interactable = &interactable_object->interactable;
             switch (interactable->kind) {
                 case Interactable_Kind_AMMO: {
                     int amount = interactable->amount;
-                    UNUSED(amount);
-                    TODO("Implement picking up ammo.");
-                } break;
-                case Interactable_Kind_WEAPON: {
-                    TODO("Implement picking up a weapon.");
+                    TraceLog(LOG_DEBUG, "Picked up %d ammo.", amount);
                 } break;
                 case Interactable_Kind_DOCUMENT: {
                     int index = interactable->info_index;
                     const Interactable_Info_Document *info = &DOCUMENT_INFOS[index];
                     TraceLog(LOG_DEBUG, "Picked up document '%s'.", info->title);
                 } break;
+                case Interactable_Kind_WEAPON: {
+                    Weapon_Kind key_kind = interactable->specific_kind;
+                    Item_Kind item_kind = key_kind + (Item_Kind_WEAPON_HANDGUN - Weapon_Kind_HANDGUN);
+                    inventory_store_item_by_kind(player->inventory, item_kind);
+                } break;
+                case Interactable_Kind_KEY: {
+                    Key_Kind key_kind = interactable->specific_kind;
+                    Item_Kind item_kind = key_kind + (Item_Kind_KEY_CLUBS - Key_Kind_CLUBS);
+                    inventory_store_item_by_kind(player->inventory, item_kind);
+                } break;
                 case Interactable_Kind_COUNT: UNREACHABLE;
             }
+
+            interactable_object->interacted = true;
         }
     }
 }
