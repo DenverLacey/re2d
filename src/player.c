@@ -5,15 +5,17 @@
 #include "raymath.h"
 
 #include "input.h"
-#include "level_geometry.h"
+#include "level/level_geometry.h"
 #include "utils.h"
 
-#define GRAVITY 500.f
+#define GRAVITY 800.f
 
 void player_poll_input(Input *input, Camera2D camera) {
     input->player_movement = (Vector2){0};
     
     set_flags_if(&input->flags, IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT), Input_Flags_AIMING);
+
+    input->mouse_world_position = GetScreenToWorld2D(input->mouse_position, camera);
 
     if (IsKeyPressed(KEY_I)) {
         if (is_flags_set(input->flags, Input_Flags_INVENTORY_OPEN)) {
@@ -30,12 +32,10 @@ void player_poll_input(Input *input, Camera2D camera) {
         if (IsKeyDown(KEY_A)) input->player_movement.x -= 1;
         if (IsKeyDown(KEY_S)) input->player_movement.y += 1;
         if (IsKeyDown(KEY_D)) input->player_movement.x += 1;
-    } else {
-        input->aim_position = GetWorldToScreen2D(input->mouse_position, camera);
     }
 }
 
-void player_update(Player *player, Input *input, Level_Geometry *level) {
+void player_update_movement(Player *player, Input *input, Level_Geometry *level) {
     if (is_flags_set(player->flags, Player_Flags_FALLING)) {
         player->position.y += GRAVITY * input->delta_time;
 
@@ -63,13 +63,37 @@ void player_update(Player *player, Input *input, Level_Geometry *level) {
             player->position = movement.desired_position;
             player->current_floor = movement.new_floor;
         }
-        
-        if (!is_flags_set(player->flags, Player_Flags_FALLING) &&
-            is_flags_set(input->flags, Input_Flags_AIMING))
-        {
-            Vector2 aim_position = input->aim_position;
-            UNUSED(aim_position);
-            // TODO: Check for collision with shootable object
+    }
+}
+
+void player_update_aiming(Player *player, Input *input, Level_Interactables *level) {
+    if (is_flags_set(player->flags, Player_Flags_FALLING)) {
+        return;
+    }
+
+    if (is_flags_set(input->flags, Input_Flags_AIMING)) {
+        // TODO: Check for collision with shootable object
+    } else if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        Level_Interactable_Object *interactable_object = get_interactable_at_position(level, input->mouse_world_position);
+
+        if (interactable_object) {
+            Interactable *interactable = &interactable_object->interactable;
+            switch (interactable->kind) {
+                case Interactable_Kind_AMMO: {
+                    int amount = interactable->amount;
+                    UNUSED(amount);
+                    TODO("Implement picking up ammo.");
+                } break;
+                case Interactable_Kind_WEAPON: {
+                    TODO("Implement picking up a weapon.");
+                } break;
+                case Interactable_Kind_DOCUMENT: {
+                    int index = interactable->info_index;
+                    const Interactable_Info_Document *info = &DOCUMENT_INFOS[index];
+                    TraceLog(LOG_DEBUG, "Picked up document '%s'.", info->title);
+                } break;
+                case Interactable_Kind_COUNT: UNREACHABLE;
+            }
         }
     }
 }

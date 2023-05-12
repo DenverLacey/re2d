@@ -77,6 +77,12 @@ int vec_internal_find(size_t count, const void *items, const void *item, size_t 
     (vec)->items = NULL;                                                                      \
 } while (0)
 
+#define vec_foreach(__ty, __it, __v) for (                                                    \
+    __ty *__it = &(__v).items[0];                                                             \
+    __it != &(__v).items[(__v).count];                                                        \
+    ++__it                                                                                    \
+)
+
 #ifdef bool
     #undef bool
     DEFINE_VEC_FOR_TYPE_WITH_NAME(_Bool, bool);

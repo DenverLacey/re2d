@@ -14,8 +14,8 @@ typedef struct {
     Input_Flags flags;
     float delta_time;
     Vector2 mouse_position;
+    Vector2 mouse_world_position;
     Vector2 player_movement;
-    Vector2 aim_position;
 } Input;
 
 #endif

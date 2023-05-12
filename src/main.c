@@ -7,7 +7,7 @@
 #include "input.h"
 #include "player.h"
 #include "enemy.h"
-#include "level_geometry.h"
+#include "level/level_geometry.h"
 #include "utils.h"
 
 #define DRAW_GIZMOS 1
@@ -220,6 +220,22 @@ int main(int argc, const char **argv) {
 
     Level_Geometry level = level_geometry_make(sizeof(joints) / sizeof(joints[0]), joints);
 
+    Level_Interactable_Object interactables[] = {
+        (Level_Interactable_Object){
+            .position = vec2(1600.f, WINDOW_HEIGHT / 2),
+            .interactable = (Interactable){
+                .kind = Interactable_Kind_DOCUMENT,
+                .info_index = 0
+            },
+            .interacted = false
+        }
+    };
+
+    Level_Interactables level_interactables = (Level_Interactables){
+        .num_objects = sizeof(interactables) / sizeof(interactables[0]),
+        .objects = interactables
+    };
+
     Inventory player_inventory = {0};
     Vector2 player_start_position = lerpv(level.joints[0].position, level.joints[1].position, 0.5f);
     Player player = (Player){
@@ -250,6 +266,12 @@ int main(int argc, const char **argv) {
 
     HideCursor();
 
+#ifdef DEBUG
+    const Color background_color = GetColor(0xd1d1d1FF);
+#else
+    const Color background_color = BLACK;
+#endif
+
     while (!WindowShouldClose()) {
         // Input ==============================================================
         input.delta_time = GetFrameTime();
@@ -258,11 +280,11 @@ int main(int argc, const char **argv) {
         player_poll_input(&input, world_camera);
 
         // Update =============================================================
-        player_update(&player, &input, &level);
+        player_update_movement(&player, &input, &level);
+        player_update_aiming(&player, &input, &level_interactables);
 
 #if 1
-        for (size_t i = 0; i < enemies.count; ++i) {
-            Enemy *e = &enemies.items[i];
+        vec_foreach(Enemy, e, enemies) {
             enemy_update(e, &level, input.delta_time);
         }
 #endif
@@ -271,7 +293,7 @@ int main(int argc, const char **argv) {
         update_camera(&world_camera, player.position, level.min_extents, level.max_extents, input.delta_time);
 
         // Draw ===============================================================
-        ClearBackground(WHITE);
+        ClearBackground(background_color);
         BeginDrawing();
         {
             BeginMode2D(world_camera);
@@ -281,8 +303,9 @@ int main(int argc, const char **argv) {
                     pathfind_geometry_draw_gizmos(&level.pathfinding);
                 #endif
 
-                for (size_t i = 0; i < enemies.count; ++i) {
-                    Enemy *e = &enemies.items[i];
+                level_interactables_draw(&level_interactables);
+
+                vec_foreach(Enemy, e, enemies) {
                     enemy_draw(e);
                     #if defined(DEBUG) && DRAW_GIZMOS
                         enemy_draw_path(e);

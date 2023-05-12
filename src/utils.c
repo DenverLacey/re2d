@@ -40,3 +40,7 @@ float clamp(float a, float min, float max) {
     if (a > max) a = max;
     return a;
 }
+
+#if !(defined(__GNUC__) || defined(_MSC_VER)) 
+_Noreturn inline void unreachable_impl() {}
+#endif

@@ -6,7 +6,7 @@ project "re2d"
     language "C"
     cdialect "C11"
 
-    files { "src/*.c" }
+    files { "src/**.c" }
 
     includedirs {
         "src",

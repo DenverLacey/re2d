@@ -4,7 +4,7 @@
 #include "raylib.h"
 #include "vec.h"
 
-#include "level_geometry.h"
+#include "level/level_geometry.h"
 
 #define ENEMY_WIDTH 25
 #define ENEMY_HEIGHT 100
@@ -13,11 +13,15 @@
 #define ENEMY_PATHING_WAIT_TIME_SECS 1.5f
 
 typedef struct {
+    // Pathfinding State
     Vector2 position;     // current position
     Vector2 destination;  // final destination of `path`
     double destination_request_time;
     int target;           // index of current target position in `path`
     Vec_Vector2 path;
+
+    // Combat State
+    float health;
 } Enemy;
 
 DEFINE_VEC_FOR_TYPE(Enemy);

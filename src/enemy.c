@@ -53,7 +53,10 @@ void enemy_draw(Enemy *enemy) {
     };
 
     DrawRectangleRec(enemy_rect, ENEMY_COLOR);
-    DrawCircleV(position, 2.f, LIME);
+    
+    #ifdef DEBUG
+        DrawCircleV(position, 2.f, LIME);
+    #endif
 }
 
 bool enemy_find_path_to(Enemy *enemy, Vector2 destination, Level_Geometry *level) {

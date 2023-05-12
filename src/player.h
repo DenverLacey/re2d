@@ -4,13 +4,14 @@
 #include "raylib.h"
 
 #include "input.h"
-#include "level_geometry.h"
+#include "level/level_geometry.h"
+#include "level/level_interactables.h"
 #include "inventory.h"
 
 #define PLAYER_WIDTH 25.f
 #define PLAYER_HEIGHT 100.f
 #define PLAYER_COLOR BLACK
-#define PLAYER_SPEED 300.f
+#define PLAYER_SPEED 200.f
 
 typedef enum {
     Player_Flags_FALLING = 0x1,
@@ -27,7 +28,8 @@ typedef struct {
 } Player;
 
 void player_poll_input(Input *input, Camera2D camera);
-void player_update(Player *player, Input *input, Level_Geometry *level);
+void player_update_movement(Player *player, Input *input, Level_Geometry *level);
+void player_update_aiming(Player *player, Input *input, Level_Interactables*level);
 void player_draw(Player *player);
 
 #endif

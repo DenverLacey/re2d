@@ -34,4 +34,21 @@ DEFINE_VEC_FOR_TYPE(Vector2);
 
 #define UNUSED(_x) ((void)_x)
 
+#define TODO(__msg) (assert(!"TODO" __msg))
+
+#ifdef __GNUC__ // GCC, Clang, ICC
+
+#define UNREACHABLE (__builtin_unreachable())
+
+#elif defined(_MSC_VER) // MSVC
+
+#define UNREACHABLE (__assume(0))
+
+#else
+
+_Noreturn inline void unreachable_impl();
+#define UNREACHABLE (unreachable_impl())
+
+#endif
+
 #endif
