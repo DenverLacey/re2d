@@ -13,7 +13,7 @@
 #define PLAYER_COLOR BLACK
 #define PLAYER_SPEED 200.f
 
-#define MAX_PICKUP_DISTANCE 100.f
+#define MAX_PICKUP_DISTANCE 200.f
 
 typedef enum {
     Player_Flags_FALLING = 0x1,

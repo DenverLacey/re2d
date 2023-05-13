@@ -13,6 +13,6 @@ typedef struct {
     Vector2 point;
 } Collision;
 
-// Collision collision_player_vs_floor_segment(Vector2 player, Floor_Segment seg);
+bool check_overlap(float a_min, float a_max, float b_min, float b_max);
 
 #endif

@@ -293,7 +293,7 @@ bool floor_contains_point(Floor floor, Vector2 point) {
     if (floor.right->position.x < point.x) return false;
 
     if (floor_is_flat(floor)) {
-        if (floor.left->position.y != point.y) return false;
+        if (!FloatEquals(floor.left->position.y, point.y)) return false;
     } else {
         Vector2 expected_gradiant = Vector2Normalize(
             Vector2Subtract(floor.right->position, floor.left->position)
