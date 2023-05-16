@@ -1,6 +1,7 @@
 #ifndef INVENTORY_H_
 #define INVENTORY_H_
 
+#include "draw.h"
 #include "utils.h"
 
 #define INV_SIZE 25
@@ -28,13 +29,19 @@
 
 typedef enum {
     Item_Kind_FOOD,
+    
     // WARNING: Key kinds must be in alphabetical order. Parts of the code rely on this fact.
     Item_Kind_KEY_CLUBS,
     Item_Kind_KEY_DIAMONDS,
     Item_Kind_KEY_HEARTS,
     Item_Kind_KEY_SPADES,
+    
     // WARNING: Weapon kinds must be in alphabetical order. Parts of the code rely on this fact.
     Item_Kind_WEAPON_HANDGUN,
+
+    // WARNING: Ammo kinds must be in alphabetical order. Parts of the code rely on this fact.
+    Item_Kind_AMMO_HANDGUN,
+    
     Item_Kind_COUNT
 } Item_Kind;
 
@@ -66,6 +73,6 @@ bool inventory_store_items_by_kind(Inventory *inv, Item_Kind kind, int count);
 bool inventory_store_item_by_kind(Inventory *inv, Item_Kind kind);
 Slot *inventory_get_slot_at(Inventory *inv, int index);
 const Item *inventory_get_item_at(Inventory *inv, int index);
-void inventory_draw(Inventory *inv);
+void inventory_draw(Inventory *inv, Drawer *drawer);
 
 #endif

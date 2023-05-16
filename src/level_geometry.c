@@ -6,6 +6,7 @@
 
 #include "raymath.h"
 
+#include "draw.h"
 #include "collisions.h"
 #include "utils.h"
 
@@ -334,14 +335,14 @@ Floor level_find_floor(Level_Geometry *level, Vector2 position) {
 
 #ifdef DEBUG
 
-void level_geometry_draw_gizmos(Level_Geometry *level) {
+void level_geometry_draw_gizmos(Level_Geometry *level, Drawer *drawer) {
     Rectangle level_rect = {
         .x = level->min_extents.x,
         .y = level->min_extents.y,
         .width = level->max_extents.x - level->min_extents.y,
         .height = level->max_extents.y - level->min_extents.y
     };
-    DrawRectangleLinesEx(level_rect, 1.f, LIME);
+    draw_rectangle_outline(drawer, Draw_Layer_GIZMOS, level_rect, 1.f, LIME);
 
     for (size_t j = 0; j < level->num_joints; ++j) {
         Geometry_Joint *joint = &level->joints[j];
@@ -354,20 +355,20 @@ void level_geometry_draw_gizmos(Level_Geometry *level) {
             if (conn_idx == -1) continue;
 
             Geometry_Joint *connection = &level->joints[conn_idx];
-            DrawLineEx(joint->position, connection->position, 1.f, GRAY);
+            draw_line(drawer, Draw_Layer_GIZMOS, joint->position, connection->position, 1.f, GRAY);
         }
     }
 }
 
-void pathfind_geometry_draw_gizmos(Pathfinding *p) {
+void pathfind_geometry_draw_gizmos(Pathfinding *p, Drawer *drawer) {
     for (size_t i = 0; i < p->num_nodes; ++i) {
         Pathfind_Node *node = &p->nodes[i];
 
-        DrawCircleV(node->vposition, 4.f, MAGENTA);
+        draw_circle(drawer, Draw_Layer_GIZMOS, node->vposition, 4.f, MAGENTA);
 
         for (int j = 0; j < node->num_neighbours; ++j) {
             Pathfind_Node *neighbour = node->neighbours[j];
-            DrawLineEx(node->vposition, neighbour->vposition, 1.f, MAGENTA);
+            draw_line(drawer, Draw_Layer_GIZMOS, node->vposition, neighbour->vposition, 1.f, MAGENTA);
         }
     }
 }

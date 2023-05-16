@@ -3,9 +3,11 @@
 
 #include "raylib.h"
 
+#include "draw.h"
+#include "enemy.h"
 #include "input.h"
-#include "level/level_geometry.h"
-#include "level/level_interactables.h"
+#include "level_geometry.h"
+#include "level_interactables.h"
 #include "inventory.h"
 
 #define PLAYER_WIDTH 25.f
@@ -29,9 +31,9 @@ typedef struct {
     Inventory *inventory;
 } Player;
 
-void player_poll_input(Input *input, Camera2D camera);
+void player_poll_input(Input *input);
 void player_update_movement(Player *player, Input *input, Level_Geometry *level);
-void player_update_aiming(Player *player, Input *input, Level_Interactables*level);
-void player_draw(Player *player);
+void player_update_aiming(Player *player, Input *input, Level_Interactables* level, size_t num_enemies, Enemy *enemies);
+void player_draw(Player *player, Drawer *drawer);
 
 #endif

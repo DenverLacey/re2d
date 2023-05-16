@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#include "draw.h"
 #include "interactables.h"
 
 typedef struct {
@@ -19,6 +20,6 @@ typedef struct {
 
 Level_Object_Interactable *get_interactable_at_position(Level_Interactables *level, Vector2 position);
 
-void level_interactables_draw(Level_Interactables *level, Vector2 player_position, Vector2 mouse_world_position);
+void level_interactables_draw(Level_Interactables *level, Vector2 player_position, Vector2 mouse_world_position, Drawer *drawer);
 
 #endif

@@ -5,6 +5,7 @@
 
 #include "raymath.h"
 
+#include "draw.h"
 #include "collisions.h"
 #include "utils.h"
 #include "player.h"
@@ -13,7 +14,7 @@
 
 #define ITEM_NAME_DISPLAY_FONT_SIZE 25.f
 #define ITEM_NAME_DISPLAY_POSITION_OFFSET_Y 7.5f
-#define ITEM_NAME_DISPLAY_COLOR BLACK
+#define ITEM_NAME_DISPLAY_COLOR WHITE
 
 Level_Object_Interactable *get_interactable_at_position(Level_Interactables *level, Vector2 position) {
     for (size_t i = 0; i < level->num_objects; ++i) {
@@ -36,18 +37,19 @@ Level_Object_Interactable *get_interactable_at_position(Level_Interactables *lev
     return NULL;
 }
 
-static void draw_item_name_above_player(Interactable *item, Vector2 item_position, Vector2 player_position) {
+static void draw_item_name_above_player(Interactable *item, Vector2 item_position, Vector2 player_position, Drawer *drawer) {
     char item_name[32];
 
     switch (item->kind) {
         case Interactable_Kind_AMMO: {
             Ammo_Kind kind = item->specific_kind;
             const char *kind_strs[] = { "HG" };
-            snprintf(item_name, sizeof(item_name), "Ammo (%s)", kind_strs[kind]);
+            snprintf(item_name, sizeof(item_name), "Ammo (%s) x%d", kind_strs[kind], item->amount);
         } break;
         case Interactable_Kind_DOCUMENT: {
             const Interactable_Info_Document *info = &DOCUMENT_INFOS[item->info_index];
-            snprintf(item_name, sizeof(item_name), "%s", info->title);
+            // snprintf(item_name, sizeof(item_name), "%s", info->title);
+            strcpy(item_name, info->title);
         } break;
         case Interactable_Kind_WEAPON: {
             Weapon_Kind kind = item->specific_kind;
@@ -75,10 +77,15 @@ static void draw_item_name_above_player(Interactable *item, Vector2 item_positio
         y = fminf(y, tentative_y);
     }
 
-    DrawText(item_name, x, y, ITEM_NAME_DISPLAY_FONT_SIZE, ITEM_NAME_DISPLAY_COLOR);
+    draw_text(drawer, Draw_Layer_SCREEN_WORLD, item_name, vec2(x, y), ITEM_NAME_DISPLAY_FONT_SIZE, ITEM_NAME_DISPLAY_COLOR);
 }
 
-void level_interactables_draw(Level_Interactables *level, Vector2 player_position, Vector2 mouse_world_position) {
+void level_interactables_draw(
+    Level_Interactables *level,
+    Vector2 player_position,
+    Vector2 mouse_world_position,
+    Drawer *drawer)
+{
     for (size_t i = 0; i < level->num_objects; ++i) {
         Level_Object_Interactable *object = &level->objects[i];
         if (object->interacted) continue;
@@ -90,12 +97,12 @@ void level_interactables_draw(Level_Interactables *level, Vector2 player_positio
             .height = INTERACTABLE_SIZE
         };
 
-        DrawRectangleRec(item_rect, YELLOW);
+        draw_rectangle(drawer, Draw_Layer_INTERACTABLES, item_rect, YELLOW);
 
         float distance_sqr = Vector2DistanceSqr(object->position, player_position);
         bool within_pickup_distance = distance_sqr <= (MAX_PICKUP_DISTANCE * MAX_PICKUP_DISTANCE);
         if (CheckCollisionPointRec(mouse_world_position, item_rect) && within_pickup_distance) {
-            draw_item_name_above_player(&object->interactable, object->position, player_position);
+            draw_item_name_above_player(&object->interactable, object->position, player_position, drawer);
         }
     }
 }

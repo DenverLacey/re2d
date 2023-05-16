@@ -5,7 +5,7 @@
 
 #include "raylib.h"
 
-#include "level/level_geometry.h"
+#include "level_geometry.h"
 
 typedef struct {
     bool hit;

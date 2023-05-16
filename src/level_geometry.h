@@ -5,6 +5,7 @@
 
 #include "raylib.h"
 
+#include "draw.h"
 #include "view.h"
 #include "vec.h"
 #include "utils.h"
@@ -93,8 +94,8 @@ bool floor_contains_point(Floor floor, Vector2 point);
 Floor level_find_floor(Level_Geometry *level, Vector2 position);
 
 #ifdef DEBUG
-void level_geometry_draw_gizmos(Level_Geometry *level);
-void pathfind_geometry_draw_gizmos(Pathfinding *p);
+void level_geometry_draw_gizmos(Level_Geometry *level, Drawer *drawer);
+void pathfind_geometry_draw_gizmos(Pathfinding *p, Drawer *drawer);
 #endif
 
 #endif 

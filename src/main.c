@@ -4,65 +4,87 @@
 #include "raylib.h"
 #include "raymath.h"
 
+#include "camera.h"
+#include "draw.h"
 #include "input.h"
 #include "player.h"
 #include "enemy.h"
-#include "level/level_geometry.h"
+#include "level_geometry.h"
 #include "utils.h"
 
 #define DRAW_GIZMOS 1
 
-#define CAMERA_MARGIN 50.f
-#define CAMERA_MIN_SPEED 30.f
-#define CAMERA_MIN_EFFECT_LENGTH 1.f
-#define CAMERA_FRACTION_SPEED 2.f
-
 #define CROSS_LENGTH 7
 #define CROSS_GIRTH 3
 #define CROSS_OFFSET 7
-#define CROSS_COLOR BLACK
+#define CROSS_COLOR WHITE
 
-#define BULLET_SIZE 4
-#define BULLET_SPEED 4000
-#define BULLET_ALIVE_TIME_SECS 0.5
 #define BULLET_ORIGIN_OFFSET (Vector2){ .x = 0, .y = -(PLAYER_HEIGHT * 0.65f) }
-#define BULLET_COLOR DARKGRAY
 
-#define vec2_print(str, v2) snprintf(str, sizeof(str), "(%f, %f)", (v2).x, (v2).y)
-
-void update_camera(Camera2D *camera, Vector2 player_position, Vector2 min_extents, Vector2 max_extents, float delta) {
-    camera->offset = vec2(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2);
-    Vector2 diff = Vector2Subtract(player_position, camera->target);
-    float length = Vector2Length(diff);
-
-    if (length > CAMERA_MIN_EFFECT_LENGTH) {
-        float speed = fmaxf(CAMERA_FRACTION_SPEED * length, CAMERA_MIN_SPEED);
-        camera->target = Vector2Add(camera->target, Vector2Scale(diff, speed * delta / length));
-    }
-
-    Vector2 min = GetWorldToScreen2D(Vector2Add(min_extents, vec2(-CAMERA_MARGIN, 0.f)), *camera);
-    Vector2 max = GetWorldToScreen2D(Vector2Add(max_extents, vec2(CAMERA_MARGIN, WINDOW_HEIGHT / 2)), *camera);
-
-    if (max.x < WINDOW_WIDTH) camera->offset.x = WINDOW_WIDTH - (max.x - WINDOW_WIDTH / 2);
-    if (max.y < WINDOW_HEIGHT) camera->offset.y = WINDOW_HEIGHT - (max.y - WINDOW_HEIGHT / 2);
-    if (min.x > 0) camera->offset.x = WINDOW_WIDTH / 2 - min.x;
-    if (min.y > 0) camera->offset.y = WINDOW_HEIGHT / 2 - min.y;
-}
-
-void draw_crosshair(Vector2 position, Color color) {
+void draw_crosshair(Vector2 position, Color color, Drawer *drawer) {
     // left
-    DrawRectangle(position.x - CROSS_OFFSET - CROSS_LENGTH / 2, position.y - CROSS_GIRTH / 2, CROSS_LENGTH, CROSS_GIRTH, color);
+    draw_rectangle(
+        drawer,
+        Draw_Layer_SCREEN,
+        (Rectangle){
+            .x = position.x - CROSS_OFFSET - CROSS_LENGTH / 2,
+            .y = position.y - CROSS_GIRTH / 2,
+            .width = CROSS_LENGTH,
+            .height = CROSS_GIRTH, 
+        },
+        color
+    );
     // right
-    DrawRectangle(position.x + CROSS_OFFSET - CROSS_LENGTH / 2, position.y - CROSS_GIRTH / 2, CROSS_LENGTH, CROSS_GIRTH, color);
+    draw_rectangle(
+        drawer,
+        Draw_Layer_SCREEN,
+        (Rectangle){
+            .x = position.x + CROSS_OFFSET - CROSS_LENGTH / 2,
+            .y = position.y - CROSS_GIRTH / 2,
+            .width = CROSS_LENGTH,
+            .height = CROSS_GIRTH
+        },
+        color
+    );
     // top
-    DrawRectangle(position.x - CROSS_GIRTH / 2, position.y - CROSS_OFFSET - CROSS_LENGTH / 2, CROSS_GIRTH, CROSS_LENGTH, color);
+    draw_rectangle(
+        drawer,
+        Draw_Layer_SCREEN,
+        (Rectangle){
+            .x = position.x - CROSS_GIRTH / 2,
+            .y = position.y - CROSS_OFFSET - CROSS_LENGTH / 2,
+            .width = CROSS_GIRTH,
+            .height = CROSS_LENGTH
+        },
+        color
+    );
     // bottom
-    DrawRectangle(position.x - CROSS_GIRTH / 2, position.y + CROSS_OFFSET - CROSS_LENGTH / 2, CROSS_GIRTH, CROSS_LENGTH, color);
+    draw_rectangle(
+        drawer,
+        Draw_Layer_SCREEN,
+        (Rectangle){
+            .x = position.x - CROSS_GIRTH / 2,
+            .y = position.y + CROSS_OFFSET - CROSS_LENGTH / 2,
+            .width = CROSS_GIRTH,
+            .height = CROSS_LENGTH
+        },
+        color
+    );
 }
 
-void cursor_draw(Vector2 position, Color color) {
+void cursor_draw(Vector2 position, Color color, Drawer *drawer) {
     // TODO: Actually draw a cursor or something
-    DrawRectangleV(position, vec2(10, 10), color);
+    draw_rectangle(
+        drawer,
+        Draw_Layer_SCREEN,
+        (Rectangle){
+            .x = position.x,
+            .y = position.y,
+            .width = 10,
+            .height = 10
+        },
+        color
+    );
 }
 
 int main(int argc, const char **argv) {
@@ -218,7 +240,7 @@ int main(int argc, const char **argv) {
         }
     };
 
-    Level_Geometry level = level_geometry_make(sizeof(joints) / sizeof(joints[0]), joints);
+    Level_Geometry level_geometry = level_geometry_make(sizeof(joints) / sizeof(joints[0]), joints);
 
     Level_Object_Interactable interactables[] = {
         {
@@ -262,98 +284,104 @@ int main(int argc, const char **argv) {
     };
 
     Inventory player_inventory = {0};
-    Vector2 player_start_position = lerpv(level.joints[0].position, level.joints[1].position, 0.5f);
+    Vector2 player_start_position = lerpv(level_geometry.joints[0].position, level_geometry.joints[1].position, 0.5f);
     Player player = {
         .flags = 0,
         .position = player_start_position,
-        .current_floor = level_find_floor(&level, player_start_position),
+        .current_floor = level_find_floor(&level_geometry, player_start_position),
         .inventory = &player_inventory
     };
 
-    Camera2D world_camera;
-    world_camera.target = player.position;
-    world_camera.rotation = 0.f;
-    world_camera.offset.x = WINDOW_WIDTH / 2;
-    world_camera.offset.y = WINDOW_HEIGHT / 2;
-    world_camera.zoom = 1.f;
+    Camera2D player_camera;
+    player_camera.target = player.position;
+    player_camera.rotation = 0.f;
+    player_camera.offset.x = WINDOW_WIDTH / 2;
+    player_camera.offset.y = WINDOW_HEIGHT / 2;
+    player_camera.zoom = CAMERA_NORMAL_ZOOM;
 
-    Vector2 enemy_start_position = lerpv(level.joints[4].position, level.joints[5].position, 0.5f);
+    Vector2 enemy_start_position = lerpv(level_geometry.joints[4].position, level_geometry.joints[5].position, 0.5f);
 
     Vec_Enemy enemies = {0};
     vec_append(&enemies, (Enemy){
-        .position = enemy_start_position
+        .position = enemy_start_position,
+        .health = 100.f
     });
 
-    Vector2 enemy_desitnation = lerpv(level.joints[2].position, level.joints[3].position, 0.5f);
-    enemy_find_path_to(&enemies.items[0], enemy_desitnation, &level);
+    Vector2 enemy_desitnation = lerpv(level_geometry.joints[2].position, level_geometry.joints[3].position, 0.5f);
+    enemy_find_path_to(&enemies.items[0], enemy_desitnation, &level_geometry);
 
     Input input;
 
     HideCursor();
 
 #ifdef DEBUG
-    const Color background_color = GetColor(0xd1d1d1FF);
+    const Color background_color = GetColor(0x914355FF);
 #else
     const Color background_color = BLACK;
 #endif
+
+    Drawer drawer = {0};
 
     while (!WindowShouldClose()) {
         // Input ==============================================================
         input.delta_time = GetFrameTime();
         input.mouse_position = GetMousePosition();
+        input.mouse_world_position = GetScreenToWorld2D(input.mouse_position, player_camera);
 
-        player_poll_input(&input, world_camera);
+        player_poll_input(&input);
 
         // Update =============================================================
-        player_update_movement(&player, &input, &level);
-        player_update_aiming(&player, &input, &level_interactables);
+        player_update_movement(&player, &input, &level_geometry);
+        player_update_aiming(&player, &input, &level_interactables, enemies.count, enemies.items);
 
-#if 1
-        vec_foreach(Enemy, e, enemies) {
-            enemy_update(e, &level, input.delta_time);
-        }
-#endif
-
+        enemy_update_all(&enemies, &level_geometry, input.delta_time);
+        
         // Late Update ========================================================
-        update_camera(&world_camera, player.position, level.min_extents, level.max_extents, input.delta_time);
+        player_camera_update(&player_camera, player.position, level_geometry.min_extents, level_geometry.max_extents, &input);
 
         // Draw ===============================================================
         ClearBackground(background_color);
+        clear_layers(&drawer);
+
+        #ifdef DEBUG
+            level_geometry_draw_gizmos(&level_geometry, &drawer);
+            pathfind_geometry_draw_gizmos(&level_geometry.pathfinding, &drawer);
+        #endif
+
+        vec_foreach(Enemy, e, enemies) {
+            enemy_draw(e, &drawer);
+            #if defined(DEBUG) && DRAW_GIZMOS
+                enemy_draw_path(e, &drawer);
+            #endif
+        }
+
+        if (is_flags_set(input.flags, Input_Flags_AIMING)) {
+            Vector2 origin = Vector2Add(player.position, BULLET_ORIGIN_OFFSET);
+            Vector2 aiming_position = input.mouse_world_position;
+            draw_line(&drawer, Draw_Layer_PLAYER, origin, aiming_position, 1.5f, RED);
+            draw_circle(&drawer, Draw_Layer_PLAYER, aiming_position, 2.f, RED);
+        }
+
+        player_draw(&player, &drawer);
+
+        level_interactables_draw(&level_interactables, player.position, input.mouse_world_position, &drawer);
+
+        if (is_flags_set(input.flags, Input_Flags_INVENTORY_OPEN)) {
+            inventory_draw(player.inventory, &drawer);
+            cursor_draw(input.mouse_position, BLACK, &drawer);
+        } else {
+            draw_crosshair(input.mouse_position, CROSS_COLOR, &drawer); // TODO: Make yellow or something when crosshair is hovering interactable
+        }
+
         BeginDrawing();
         {
-            BeginMode2D(world_camera);
+            BeginMode2D(player_camera);
             {
-                #ifdef DEBUG
-                    level_geometry_draw_gizmos(&level);
-                    pathfind_geometry_draw_gizmos(&level.pathfinding);
-                #endif
-
-                level_interactables_draw(&level_interactables, player.position, input.mouse_world_position);
-
-                vec_foreach(Enemy, e, enemies) {
-                    enemy_draw(e);
-                    #if defined(DEBUG) && DRAW_GIZMOS
-                        enemy_draw_path(e);
-                    #endif
-                }
-
-                if (is_flags_set(input.flags, Input_Flags_AIMING)) {
-                    Vector2 origin = Vector2Add(player.position, BULLET_ORIGIN_OFFSET);
-                    Vector2 aiming_position = GetScreenToWorld2D(input.mouse_position, world_camera);
-                    DrawLineEx(origin, aiming_position, 1.5f, RED);
-                    DrawCircleV(aiming_position, 2.f, RED);
-                }
-
-                player_draw(&player);
+                draw_layers(&drawer, Draw_Layer_BACKGROUND, Draw_Layer_SCREEN);
             }
             EndMode2D();
 
-            if (is_flags_set(input.flags, Input_Flags_INVENTORY_OPEN)) {
-                inventory_draw(player.inventory);
-                cursor_draw(input.mouse_position, BLACK);
-            } else {
-                draw_crosshair(input.mouse_position, CROSS_COLOR); // TODO: Make yellow or something when crosshair is hovering interactable
-            }
+            draw_layer(&drawer, Draw_Layer_SCREEN);
 
             #ifdef DEBUG
                 DrawFPS(30, 30);

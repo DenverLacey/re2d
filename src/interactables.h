@@ -11,18 +11,20 @@ typedef enum {
     Interactable_Kind_COUNT
 } Interactable_Kind;
 
+// WARNING: Ammo kinds must be alphabetic order. Parts of the code rely on this fact.
 typedef enum {
     Ammo_Kind_HANDGUN,
     Ammo_KIND_COUNT
 } Ammo_Kind;
 
+// WARNING: Weapon kinds must be alphabetic order. Parts of the code rely on this fact.
 typedef enum {
     Weapon_Kind_HANDGUN,
     Weapon_Kind_COUNT
 } Weapon_Kind;
 
+// WARNING: Key kinds must be alphabetic order. Parts of the code rely on this fact.
 typedef enum {
-    // WARNING: Key kinds must be alphabetic order. Parts of the code rely on this fact.
     Key_Kind_CLUBS,
     Key_Kind_DIAMONDS,
     Key_Kind_HEARTS,

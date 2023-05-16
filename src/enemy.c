@@ -6,15 +6,29 @@
 
 #define PATH_TARGET_COMPLETION_THRESHOLD 0.75f
 
+void enemy_update_all(Vec_Enemy *enemies, Level_Geometry *level, float delta) {
+    for (size_t i = 0; i < enemies->count;) {
+        Enemy *e = &enemies->items[i];
+        if (e->health <= 0.f) {
+            enemy_free(e);
+            vec_remove(enemies, i);
+            continue;
+        }
+
+        enemy_update(e, level, delta);
+        ++i;
+    }
+}
+
 void enemy_update(Enemy *enemy, Level_Geometry *level, float delta) {
     double now = GetTime();
     if ((now - enemy->destination_request_time >= ENEMY_PATHING_WAIT_TIME_SECS) &&
         (enemy->target == -1))
     {
         vec_free(&enemy->path);
+        // TODO: Implement getting new destination for enemies
         return;
-        // TODO: Find new destination
-        TraceLog(LOG_DEBUG, "HERE: PATHFIND!!!");
+
         Vector2 destination = enemy->position;
 
         if (!enemy_find_path_to(enemy, destination, level)) {
@@ -42,7 +56,7 @@ void enemy_update(Enemy *enemy, Level_Geometry *level, float delta) {
     }
 }
 
-void enemy_draw(Enemy *enemy) {
+void enemy_draw(Enemy *enemy, Drawer *drawer) {
     Vector2 position = enemy->position;
 
     Rectangle enemy_rect = {
@@ -52,10 +66,10 @@ void enemy_draw(Enemy *enemy) {
         .height = ENEMY_HEIGHT
     };
 
-    DrawRectangleRec(enemy_rect, ENEMY_COLOR);
+    draw_rectangle(drawer, Draw_Layer_ENEMIES, enemy_rect, ENEMY_COLOR);
     
     #ifdef DEBUG
-        DrawCircleV(position, 2.f, LIME);
+        draw_circle(drawer, Draw_Layer_ENEMIES, position, 2.f, LIME);
     #endif
 }
 
@@ -77,25 +91,29 @@ bool enemy_find_path_to(Enemy *enemy, Vector2 destination, Level_Geometry *level
     return true;
 }
 
+void enemy_free(Enemy *enemy) {
+    vec_free(&enemy->path);
+}
+
 #ifdef DEBUG
-void enemy_draw_path(Enemy *enemy) {
+void enemy_draw_path(Enemy *enemy, Drawer *drawer) {
     if (enemy->target > -1) {
-        DrawLineEx(enemy->position, enemy->path.items[enemy->target], 1.f, YELLOW);
+        draw_line(drawer, Draw_Layer_GIZMOS, enemy->position, enemy->path.items[enemy->target], 1.f, YELLOW);
         for (int i = enemy->target - 1; i >= 0; --i) {
             Vector2 a = enemy->path.items[i + 1];
             Vector2 b = enemy->path.items[i];
-            DrawLineEx(a, b, 1.f, YELLOW);
+            draw_line(drawer, Draw_Layer_GIZMOS, a, b, 1.f, YELLOW);
         }
     }
 
     for (size_t i = 0; i < enemy->path.count; ++i) {
         Vector2 target = enemy->path.items[i];
 
-        DrawCircleV(target, 10.f, YELLOW);
+        draw_circle(drawer, Draw_Layer_GIZMOS, target, 10.f, YELLOW);
         
         char index_str[4];
         snprintf(index_str, sizeof(index_str), "%lu", enemy->path.count - i);
-        DrawText(index_str, target.x, target.y, 10, BLACK);
+        draw_text(drawer, Draw_Layer_GIZMOS, index_str, vec2(target.x, target.y), 10, BLACK);
     }
 }
 #endif

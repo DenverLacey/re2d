@@ -35,6 +35,11 @@ const Item ITEMS[Item_Kind_COUNT] = {
         .kind = Item_Kind_WEAPON_HANDGUN,
         .max_slot_size = 1,
         .display_name = "Handgun"
+    },
+    [Item_Kind_AMMO_HANDGUN] = {
+        .kind = Item_Kind_AMMO_HANDGUN,
+        .max_slot_size = 30,
+        .display_name = "Ammo (HG)"
     }
 };
 
@@ -129,12 +134,16 @@ const Item *inventory_get_item_at(Inventory *inv, int index) {
     return slot->item;
 }
 
-void inventory_draw(Inventory *inv) {
-    DrawRectangle(
-        INV_UI_POS_X,
-        INV_UI_POS_Y,
-        INV_UI_WIDTH,
-        INV_UI_HEIGHT,
+void inventory_draw(Inventory *inv, Drawer *drawer) {
+    draw_rectangle(
+        drawer,
+        Draw_Layer_SCREEN,
+        (Rectangle){
+            .x = INV_UI_POS_X,
+            .y = INV_UI_POS_Y,
+            .width = INV_UI_WIDTH,
+            .height = INV_UI_HEIGHT
+        },
         ColorAlpha(BLACK, INV_UI_OPACITY)
     );
 
@@ -157,24 +166,32 @@ void inventory_draw(Inventory *inv) {
         };
 
         if (CheckCollisionPointRec(GetMousePosition(), slot_rect)) {
-            DrawRectangle(
-                slot_rect.x - INV_UI_PAD_HOVER,
-                slot_rect.y - INV_UI_PAD_HOVER,
-                slot_rect.width + INV_UI_PAD_HOVER * 2,
-                slot_rect.height + INV_UI_PAD_HOVER * 2,
+            draw_rectangle(
+                drawer,
+                Draw_Layer_SCREEN,
+                (Rectangle){
+                    .x = slot_rect.x - INV_UI_PAD_HOVER,
+                    .y = slot_rect.y - INV_UI_PAD_HOVER,
+                    .width = slot_rect.width + INV_UI_PAD_HOVER * 2,
+                    .height = slot_rect.height + INV_UI_PAD_HOVER * 2
+                },
                 WHITE
             );
         }
 
-        DrawRectangleRec(slot_rect, YELLOW);
+        draw_rectangle(drawer, Draw_Layer_SCREEN, slot_rect, YELLOW);
 
         if (inv->occupied[i]) {
             Slot *slot = &inv->slots[i];
 
-            DrawText(
+            draw_text(
+                drawer,
+                Draw_Layer_SCREEN,
                 slot->item->display_name,
-                slot_pos.x + INV_UI_PAD_TEXT,
-                slot_pos.y + INV_UI_PAD_TEXT,
+                vec2(
+                    slot_pos.x + INV_UI_PAD_TEXT,
+                    slot_pos.y + INV_UI_PAD_TEXT
+                ),
                 INV_UI_FONT_SIZE,
                 BLACK
             );
@@ -189,10 +206,14 @@ void inventory_draw(Inventory *inv) {
 
                 int text_width = MeasureText(slot_size_text, INV_UI_FONT_SIZE); 
 
-                DrawText(
+                draw_text(
+                    drawer,
+                    Draw_Layer_SCREEN,
                     slot_size_text,
-                    slot_pos.x + INV_UI_SLOT_SIZE_X - text_width - INV_UI_PAD_TEXT_SLOT_SIZE_X,
-                    slot_pos.y + INV_UI_SLOT_SIZE_Y - INV_UI_FONT_SIZE - INV_UI_PAD_TEXT_SLOT_SIZE_Y,
+                    vec2(
+                        slot_pos.x + INV_UI_SLOT_SIZE_X - text_width - INV_UI_PAD_TEXT_SLOT_SIZE_X,
+                        slot_pos.y + INV_UI_SLOT_SIZE_Y - INV_UI_FONT_SIZE - INV_UI_PAD_TEXT_SLOT_SIZE_Y
+                    ),
                     INV_UI_FONT_SIZE,
                     BLACK
                 );
