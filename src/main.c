@@ -323,6 +323,12 @@ int main(int argc, const char **argv) {
     Drawer drawer = {0};
 
     while (!WindowShouldClose()) {
+        ClearBackground(background_color);
+        clear_layers(&drawer);
+        #ifdef DEBUG
+            clear_layers(&debug_drawer);
+        #endif
+
         // Input ==============================================================
         input.delta_time = GetFrameTime();
         input.mouse_position = GetMousePosition();
@@ -340,9 +346,6 @@ int main(int argc, const char **argv) {
         player_camera_update(&player_camera, player.position, level_geometry.min_extents, level_geometry.max_extents, &input);
 
         // Draw ===============================================================
-        ClearBackground(background_color);
-        clear_layers(&drawer);
-
         #ifdef DEBUG
             level_geometry_draw_gizmos(&level_geometry, &drawer);
             pathfind_geometry_draw_gizmos(&level_geometry.pathfinding, &drawer);
@@ -385,6 +388,7 @@ int main(int argc, const char **argv) {
 
             #ifdef DEBUG
                 DrawFPS(30, 30);
+                draw_layer(&debug_drawer, Draw_Layer_SCREEN);
             #endif
         }
         EndDrawing();

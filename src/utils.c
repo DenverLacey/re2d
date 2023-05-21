@@ -35,6 +35,11 @@ Vector2 lerpv(Vector2 a, Vector2 b, float t) {
     return vec2(lerp(a.x, b.x, t), lerp(a.y, b.y, t));
 }
 
+bool eqlsf(float a, float b, float threshold) {
+    float d = a - b;
+    return d <= threshold && d >= -threshold;
+}
+
 float clamp(float a, float min, float max) {
     if (a < min) a = min;
     if (a > max) a = max;
@@ -43,4 +48,25 @@ float clamp(float a, float min, float max) {
 
 #if !(defined(__GNUC__) || defined(_MSC_VER)) 
 _Noreturn inline void unreachable_impl() {}
+#endif
+
+#ifdef DEBUG
+#include <assert.h>
+#include <stdio.h>
+
+Drawer debug_drawer = {0};
+
+void debug_internal_draw_text(Vector2 position, float font_size, const char *fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    char text[1024];
+    int result = vsprintf(text, fmt, args);
+    assert(result >= 0);
+
+    draw_text(&debug_drawer, Draw_Layer_SCREEN, text, position, font_size, LIME);
+
+    va_end(args);
+}
+
 #endif

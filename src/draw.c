@@ -122,7 +122,7 @@ void draw_layer(Drawer *drawer, Draw_Layer layer) {
                     action->text_info.color
                 );
 
-                // free(action->text_info.text);
+                free(action->text_info.text);
             } break;
             case Draw_Action_COUNT: UNREACHABLE;
         }

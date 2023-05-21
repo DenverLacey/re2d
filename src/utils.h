@@ -17,6 +17,7 @@ Vector2 vec2f3(Vector3 v3);
 Vector3 vec3(float x, float y, float z);
 Vector3 vec3f2(Vector2 v2);
 
+bool eqlsf(float a, float b, float threshold);
 float clamp(float a, float min, float max);
 
 DEFINE_VEC_FOR_TYPE(Vector2);
@@ -53,4 +54,15 @@ _Noreturn inline void unreachable_impl();
 
 #endif
 
+#endif
+
+#ifdef DEBUG
+    #include "draw.h"
+
+    extern Drawer debug_drawer;
+
+    #define debug_draw_text(_position, _font_size, ...) debug_internal_draw_text(_position, _font_size, __VA_ARGS__)
+    void debug_internal_draw_text(Vector2 position, float font_size, const char *fmt, ...);
+#else
+    #define debug_draw_text(_position, _font_size, ...)
 #endif
