@@ -54,8 +54,6 @@ _Noreturn inline void unreachable_impl();
 
 #endif
 
-#endif
-
 #ifdef DEBUG
     #include "draw.h"
 
@@ -65,4 +63,13 @@ _Noreturn inline void unreachable_impl();
     void debug_internal_draw_text(Vector2 position, float font_size, const char *fmt, ...);
 #else
     #define debug_draw_text(_position, _font_size, ...)
+#endif
+
+typedef enum {
+    Look_Direction_LEFT = -1,
+    Look_Direction_NONE = 0,
+    Look_Direction_RIGHT = 1,
+    Look_Direction_COUNT = 2
+} Look_Direction;
+
 #endif

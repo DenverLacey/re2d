@@ -25,6 +25,7 @@ typedef enum {
 typedef struct {
     Player_Flags flags;
     Vector2 position;
+    Look_Direction direction;
     Floor current_floor;
     Vector2 falling_position;
     Floor falling_floor;

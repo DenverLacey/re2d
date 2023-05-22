@@ -43,6 +43,10 @@ void player_update_movement(Player *player, Input *input, Level_Geometry *level)
             player->current_floor = player->falling_floor;
         }
     } else {
+        player->direction = input->player_movement.x < 0.f ? Look_Direction_LEFT  :
+                            input->player_movement.x > 0.f ? Look_Direction_RIGHT :
+                            Look_Direction_NONE;
+
         player->position.x += input->player_movement.x * PLAYER_SPEED * input->delta_time;
 
         Floor_Movement movement = calculate_floor_movement(

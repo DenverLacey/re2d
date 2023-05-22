@@ -343,7 +343,14 @@ int main(int argc, const char **argv) {
         enemy_update_all(&enemies, &level_geometry, input.delta_time);
         
         // Late Update ========================================================
-        player_camera_update(&player_camera, player.position, level_geometry.min_extents, level_geometry.max_extents, &input);
+        player_camera_update(
+            &player_camera,
+            player.position,
+            player.direction,
+            level_geometry.min_extents,
+            level_geometry.max_extents,
+            &input
+        );
 
         // Draw ===============================================================
         #ifdef DEBUG
