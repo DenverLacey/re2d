@@ -8,8 +8,6 @@
 #include "level_geometry.h"
 #include "utils.h"
 
-#define GRAVITY 800.f
-
 void player_poll_input(Input *input) {
     input->player_movement = (Vector2){0};
     
@@ -35,7 +33,13 @@ void player_poll_input(Input *input) {
 
 void player_update_movement(Player *player, Input *input, Level_Geometry *level) {
     if (is_flags_set(player->flags, Player_Flags_FALLING)) {
-        player->position.y += GRAVITY * input->delta_time;
+        float normalized_falling_time = fminf(
+            1.0f,
+            ilerp(GetTime() - player->start_falling_time, 0.f, PLAYER_TIME_TO_MAX_FALL_SPEED)
+        );
+        float desired_falling_speed = PLAYER_MAX_FALL_SPEED * ease_in_circ(normalized_falling_time);
+        float clamped_falling_speed = fminf(desired_falling_speed, PLAYER_MAX_FALL_SPEED);
+        player->position.y += clamped_falling_speed * input->delta_time;
 
         if (player->position.y >= player->falling_position.y) {
             unset_flags(&player->flags, Player_Flags_FALLING);
@@ -61,6 +65,7 @@ void player_update_movement(Player *player, Input *input, Level_Geometry *level)
             player->position.x = movement.desired_position.x;
             player->falling_position = movement.desired_position;
             player->falling_floor = movement.new_floor;
+            player->start_falling_time = GetTime();
         } else {
             player->position = movement.desired_position;
             player->current_floor = movement.new_floor;
@@ -156,7 +161,7 @@ void player_draw(Player *player, Drawer *drawer) {
             .width = PLAYER_WIDTH,
             .height = PLAYER_HEIGHT
         },
-        BLACK
+        PLAYER_COLOR
     );
 
     #ifdef DEBUG

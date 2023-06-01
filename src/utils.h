@@ -12,6 +12,8 @@ Vector2 lerpv(Vector2 a, Vector2 b, float t);
 
 float ilerp(float x, float a, float b);
 
+float ease_in_circ(float x);
+
 Vector2 vec2(float x, float y);
 Vector2 vec2f3(Vector3 v3);
 Vector3 vec3(float x, float y, float z);

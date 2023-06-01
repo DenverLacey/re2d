@@ -29,7 +29,7 @@ static Pathfinding pathfinding_make(size_t num_joints, Geometry_Joint *joints) {
 
     for (size_t i = 0; i < num_joints; ++i) {
         Geometry_Joint *j = &joints[i];
-        vec_append(&nodes, (Pathfind_Node){ .vposition = j->position });
+        vec_append(&nodes, (Pathfind_Node){ .position = j->position });
     }
 
     for (size_t i = 0; i < nodes.count; ++i) {
@@ -180,7 +180,7 @@ static void init_pathfind_nodes(size_t num_nodes, Pathfind_Node *nodes, Vector2 
         Pathfind_Node *node = &nodes[i];
         node->comes_from = NULL;
         node->g_score = INFINITY;
-        node->h_score = Vector2Distance(node->vposition, goal);
+        node->h_score = Vector2Distance(node->position, goal);
     }
 }
 
@@ -204,7 +204,7 @@ static void pathfind_add_to_open_set(Vec_Pathfind_Node_Ptr *set, Pathfind_Node *
 static void construct_path(Vec_Vector2 *path, Pathfind_Node *last, Vector2 end) {
     vec_append(path, end);
     for (Pathfind_Node *n = last; n != NULL; n = n->comes_from) {
-        vec_append(path, n->vposition);
+        vec_append(path, n->position);
     }
 }
 
@@ -255,7 +255,7 @@ Vec_Vector2 level_geometry_pathfind(Level_Geometry *level, Vector2 start, Vector
         for (int i = 0; i < current->num_neighbours; ++i) {
             Pathfind_Node *neighbour = current->neighbours[i];
 
-            float distance = Vector2Distance(current->vposition, neighbour->vposition);
+            float distance = Vector2Distance(current->position, neighbour->position);
             float tentative_g_score = current->g_score + distance; 
 
             if (tentative_g_score < neighbour->g_score) {
@@ -364,11 +364,11 @@ void pathfind_geometry_draw_gizmos(Pathfinding *p, Drawer *drawer) {
     for (size_t i = 0; i < p->num_nodes; ++i) {
         Pathfind_Node *node = &p->nodes[i];
 
-        draw_circle(drawer, Draw_Layer_GIZMOS, node->vposition, 4.f, MAGENTA);
+        draw_circle(drawer, Draw_Layer_GIZMOS, node->position, 4.f, MAGENTA);
 
         for (int j = 0; j < node->num_neighbours; ++j) {
             Pathfind_Node *neighbour = node->neighbours[j];
-            draw_line(drawer, Draw_Layer_GIZMOS, node->vposition, neighbour->vposition, 1.f, MAGENTA);
+            draw_line(drawer, Draw_Layer_GIZMOS, node->position, neighbour->position, 1.f, MAGENTA);
         }
     }
 }

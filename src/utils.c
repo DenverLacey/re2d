@@ -1,5 +1,7 @@
 #include "utils.h"
 
+#include "math.h"
+
 Vector2 vec2(float x, float y) {
     return (Vector2){ .x = x, .y = y };
 }
@@ -33,6 +35,10 @@ float ilerp(float x, float a, float b) {
 
 Vector2 lerpv(Vector2 a, Vector2 b, float t) {
     return vec2(lerp(a.x, b.x, t), lerp(a.y, b.y, t));
+}
+
+float ease_in_circ(float x) {
+    return 1 - sqrtf(1 - x*x);
 }
 
 bool eqlsf(float a, float b, float threshold) {

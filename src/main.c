@@ -315,7 +315,8 @@ int main(int argc, const char **argv) {
     HideCursor();
 
 #ifdef DEBUG
-    const Color background_color = GetColor(0x914355FF);
+    // const Color background_color = GetColor(0x914355FF);
+    const Color background_color = GetColor(0x181828FF);
 #else
     const Color background_color = BLACK;
 #endif
@@ -346,7 +347,6 @@ int main(int argc, const char **argv) {
         player_camera_update(
             &player_camera,
             player.position,
-            player.direction,
             level_geometry.min_extents,
             level_geometry.max_extents,
             &input

@@ -12,8 +12,10 @@
 
 #define PLAYER_WIDTH 25.f
 #define PLAYER_HEIGHT 100.f
-#define PLAYER_COLOR BLACK
+#define PLAYER_COLOR DARKGRAY
 #define PLAYER_SPEED 200.f
+#define PLAYER_MAX_FALL_SPEED 800.f
+#define PLAYER_TIME_TO_MAX_FALL_SPEED 0.25f
 
 #define MAX_PICKUP_DISTANCE 200.f
 
@@ -29,6 +31,7 @@ typedef struct {
     Floor current_floor;
     Vector2 falling_position;
     Floor falling_floor;
+    double start_falling_time;
     Inventory *inventory;
 } Player;
 

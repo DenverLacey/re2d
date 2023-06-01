@@ -52,7 +52,7 @@ typedef struct {
 #define PATHFIND_NODE_NEIGHBOUR_COUNT ((CONN_COUNT) * 2)
 
 typedef struct Pathfind_Node {
-    Vector2 vposition;
+    Vector2 position;
     float g_score;
     float h_score;
     struct Pathfind_Node *comes_from;
