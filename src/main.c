@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <time.h>
 
 #include "raylib.h"
 #include "raymath.h"
@@ -90,6 +91,8 @@ void cursor_draw(Vector2 position, Color color, Drawer *drawer) {
 int main(int argc, const char **argv) {
     UNUSED(argc);
     UNUSED(argv);
+
+    srand(time(NULL));
 
     #ifdef DEBUG
         SetTraceLogLevel(LOG_ALL);
@@ -307,8 +310,13 @@ int main(int argc, const char **argv) {
         .health = 100.f
     });
 
+#if 0
     Vector2 enemy_desitnation = lerpv(level_geometry.joints[2].position, level_geometry.joints[3].position, 0.5f);
     enemy_find_path_to(&enemies.items[0], enemy_desitnation, &level_geometry);
+#else
+    Vector2 enemy_destination = enemy_choose_random_destination(enemies.items[0].position, &level_geometry);
+    enemy_find_path_to(&enemies.items[0], enemy_destination, &level_geometry);
+#endif
 
     Input input;
 

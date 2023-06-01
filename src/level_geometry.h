@@ -36,11 +36,12 @@ typedef enum {
     JOINT_COUNT
 } Joint_Index;
 
+#define JOINT_ALL_CONN_COUNT (CONN_COUNT * JOINT_COUNT)
 typedef struct {
     Vector2 position;
     union {
         Connections connections[JOINT_COUNT];
-        int all_connections[CONN_COUNT * JOINT_COUNT];
+        int all_connections[JOINT_ALL_CONN_COUNT];
     };
 } Geometry_Joint;
 

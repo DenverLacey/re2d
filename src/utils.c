@@ -41,6 +41,10 @@ float ease_in_circ(float x) {
     return 1 - sqrtf(1 - x*x);
 }
 
+float ease_in_expo(float x) {
+    return x == 0.f ? 0.f : powf(2, 10 * x - 10);
+}
+
 bool eqlsf(float a, float b, float threshold) {
     float d = a - b;
     return d <= threshold && d >= -threshold;
@@ -67,7 +71,7 @@ void debug_internal_draw_text(Vector2 position, float font_size, const char *fmt
     va_start(args, fmt);
 
     char text[1024];
-    int result = vsprintf(text, fmt, args);
+    int result = vsnprintf(text, sizeof(text), fmt, args);
     assert(result >= 0);
 
     draw_text(&debug_drawer, Draw_Layer_SCREEN, text, position, font_size, LIME);

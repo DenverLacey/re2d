@@ -32,6 +32,7 @@ void enemy_update(Enemy *enemy, Level_Geometry *level, float delta);
 void enemy_draw(Enemy *enemy, Drawer *drawer);
 
 bool enemy_find_path_to(Enemy *enemy, Vector2 destination, Level_Geometry *level);
+Vector2 enemy_choose_random_destination(Vector2 enemy_position, Level_Geometry *level);
 
 void enemy_free(Enemy *enemy);
 

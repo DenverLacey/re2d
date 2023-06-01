@@ -26,11 +26,8 @@ void enemy_update(Enemy *enemy, Level_Geometry *level, float delta) {
         (enemy->target == -1))
     {
         vec_free(&enemy->path);
-        // TODO: Implement getting new destination for enemies
-        return;
 
-        Vector2 destination = enemy->position;
-
+        Vector2 destination = enemy_choose_random_destination(enemy->position, level);
         if (!enemy_find_path_to(enemy, destination, level)) {
             TraceLog(LOG_ERROR, "Failed to find path to destination.");
             return;
@@ -89,6 +86,33 @@ bool enemy_find_path_to(Enemy *enemy, Vector2 destination, Level_Geometry *level
     enemy->path = new_path;
 
     return true;
+}
+
+Vector2 enemy_choose_random_destination(Vector2 enemy_position, Level_Geometry *level) {
+    Vector2 destination;
+    do {
+        // @TODO: This is a really dumb algorithm that should be replaced with
+        // something more sophisticated.
+        // @BUGS:
+        //     - Enemy flies up falling connections.
+        //
+
+        int joint_idx = rand() % level->num_joints;
+        Geometry_Joint *joint = &level->joints[joint_idx];
+
+        int other_joint_idx = -1;
+        while (other_joint_idx == -1) {
+            other_joint_idx = joint->all_connections[rand() % JOINT_ALL_CONN_COUNT];
+        }
+
+        Geometry_Joint *other_joint = &level->joints[other_joint_idx];
+
+        float t = (float)rand() / (float)RAND_MAX;
+        
+        destination = lerpv(joint->position, other_joint->position, t);
+    } while (Vector2DistanceSqr(destination, enemy_position) < 5.f);
+
+    return destination;
 }
 
 void enemy_free(Enemy *enemy) {

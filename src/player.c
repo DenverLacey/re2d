@@ -37,7 +37,7 @@ void player_update_movement(Player *player, Input *input, Level_Geometry *level)
             1.0f,
             ilerp(GetTime() - player->start_falling_time, 0.f, PLAYER_TIME_TO_MAX_FALL_SPEED)
         );
-        float desired_falling_speed = PLAYER_MAX_FALL_SPEED * ease_in_circ(normalized_falling_time);
+        float desired_falling_speed = PLAYER_MAX_FALL_SPEED * ease_in_expo(normalized_falling_time);
         float clamped_falling_speed = fminf(desired_falling_speed, PLAYER_MAX_FALL_SPEED);
         player->position.y += clamped_falling_speed * input->delta_time;
 

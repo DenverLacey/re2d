@@ -12,7 +12,9 @@ Vector2 lerpv(Vector2 a, Vector2 b, float t);
 
 float ilerp(float x, float a, float b);
 
+// Easing Function Cheatsheet: https://easings.net
 float ease_in_circ(float x);
+float ease_in_expo(float x);
 
 Vector2 vec2(float x, float y);
 Vector2 vec2f3(Vector3 v3);
