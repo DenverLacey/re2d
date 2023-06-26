@@ -240,10 +240,32 @@ int main(int argc, const char **argv) {
                     .fall = -1
                 }
             }
+        },
+        [8] = {
+            .position = vec2(2020.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
+            .connections = {
+                [JOINT_LEFT] = {
+                    .up = -1,
+                    .straight = -1,
+                    .down = -1,
+                    .fall = -1
+                },
+                [JOINT_RIGHT] = {
+                    .up = -1,
+                    .straight = -1,
+                    .down = -1,
+                    .fall = -1
+                }
+            }
         }
     };
 
+    Geometry_Door doors[] = {
+        { .left = 7, .right = 8 }
+    };
+
     Level_Geometry level_geometry = level_geometry_make(sizeof(joints) / sizeof(joints[0]), joints);
+    level_geometry_register_doors(&level_geometry, sizeof(doors) / sizeof(doors[0]), doors);
 
     Level_Object_Interactable interactables[] = {
         {
@@ -302,21 +324,12 @@ int main(int argc, const char **argv) {
     player_camera.offset.y = WINDOW_HEIGHT / 2;
     player_camera.zoom = CAMERA_NORMAL_ZOOM;
 
-    Vector2 enemy_start_position = lerpv(level_geometry.joints[4].position, level_geometry.joints[5].position, 0.5f);
-
     Vec_Enemy enemies = {0};
-    vec_append(&enemies, (Enemy){
-        .position = enemy_start_position,
-        .health = 100.f
-    });
-
-#if 0
-    Vector2 enemy_desitnation = lerpv(level_geometry.joints[2].position, level_geometry.joints[3].position, 0.5f);
-    enemy_find_path_to(&enemies.items[0], enemy_desitnation, &level_geometry);
-#else
-    Vector2 enemy_destination = enemy_choose_random_destination(enemies.items[0].position, &level_geometry);
-    enemy_find_path_to(&enemies.items[0], enemy_destination, &level_geometry);
-#endif
+    for (int i = 0; i < 3; ++i) {
+        Vector2 start_position = level_geometry_random_position(&level_geometry);
+        Enemy e = enemy_spawn(start_position);
+        vec_append(&enemies, e);
+    }
 
     Input input;
 
@@ -345,6 +358,10 @@ int main(int argc, const char **argv) {
 
         player_poll_input(&input);
 
+        if (IsKeyPressed(KEY_O)) {
+            level_geometry_toggle_door(&level_geometry, doors[0], !level_geometry_is_door_open(&level_geometry, doors[0]));
+        }
+
         // Update =============================================================
         player_update_movement(&player, &input, &level_geometry);
         player_update_aiming(&player, &input, &level_interactables, enemies.count, enemies.items);
@@ -368,7 +385,7 @@ int main(int argc, const char **argv) {
 
         vec_foreach(Enemy, e, enemies) {
             enemy_draw(e, &drawer);
-            #if defined(DEBUG) && DRAW_GIZMOS
+            #if 0 && defined(DEBUG) && DRAW_GIZMOS
                 enemy_draw_path(e, &drawer);
             #endif
         }

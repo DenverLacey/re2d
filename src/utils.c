@@ -56,6 +56,17 @@ float clamp(float a, float min, float max) {
     return a;
 }
 
+float move_towards(float x, float target, float speed) {
+    float diff = target - x;
+    
+    float result;
+    if      (diff > speed)  result = x + speed;
+    else if (diff < -speed) result = x - speed;
+    else                    result = target;
+
+    return result;
+}
+
 #if !(defined(__GNUC__) || defined(_MSC_VER)) 
 _Noreturn inline void unreachable_impl() {}
 #endif

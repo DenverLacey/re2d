@@ -13,7 +13,8 @@
 #define PLAYER_WIDTH 25.f
 #define PLAYER_HEIGHT 100.f
 #define PLAYER_COLOR DARKGRAY
-#define PLAYER_SPEED 200.f
+#define PLAYER_SPEED 150.f
+#define PLAYER_ACCELERATION 60.f
 #define PLAYER_MAX_FALL_SPEED 800.f
 #define PLAYER_TIME_TO_MAX_FALL_SPEED 0.25f
 
@@ -27,7 +28,7 @@ typedef enum {
 typedef struct {
     Player_Flags flags;
     Vector2 position;
-    Look_Direction direction;
+    float velocity;
     Floor current_floor;
     Vector2 falling_position;
     Floor falling_floor;

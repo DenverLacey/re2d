@@ -47,17 +47,14 @@ void player_update_movement(Player *player, Input *input, Level_Geometry *level)
             player->current_floor = player->falling_floor;
         }
     } else {
-        player->direction = input->player_movement.x < 0.f ? Look_Direction_LEFT  :
-                            input->player_movement.x > 0.f ? Look_Direction_RIGHT :
-                            Look_Direction_NONE;
-
-        player->position.x += input->player_movement.x * PLAYER_SPEED * input->delta_time;
+        player->velocity = lerp(player->velocity, input->player_movement.x, PLAYER_ACCELERATION * 0.001f);
+        player->position.x += player->velocity * PLAYER_SPEED * input->delta_time;
 
         Floor_Movement movement = calculate_floor_movement(
             level,
             player->position,
             player->current_floor,
-            input->player_movement
+            vec2(player->velocity, input->player_movement.y)
         );
 
         if (movement.falling) {
@@ -101,16 +98,7 @@ void player_update_aiming(
 
             if (CheckCollisionPointRec(input->mouse_world_position, e_rect)) {
                 const float damange = 10.f;
-                e->health -= damange;
-
-                TraceLog(
-                    LOG_INFO,
-                    "Enemy at (%g, %g) took %g damage and is now at %g health.",
-                    e->position.x, e->position.y,
-                    damange,
-                    e->health
-                );
-
+                enemy_damage(e, damange);
                 break;
             }
         }

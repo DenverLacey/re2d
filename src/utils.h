@@ -24,6 +24,8 @@ Vector3 vec3f2(Vector2 v2);
 bool eqlsf(float a, float b, float threshold);
 float clamp(float a, float min, float max);
 
+float move_towards(float x, float target, float speed);
+
 DEFINE_VEC_FOR_TYPE(Vector2);
 
 #define is_flags_set(_in, _fl) (((_in) & (_fl)) == (_fl))
@@ -68,12 +70,5 @@ _Noreturn inline void unreachable_impl();
 #else
     #define debug_draw_text(_position, _font_size, ...)
 #endif
-
-typedef enum {
-    Look_Direction_LEFT = -1,
-    Look_Direction_NONE = 0,
-    Look_Direction_RIGHT = 1,
-    Look_Direction_COUNT = 2
-} Look_Direction;
 
 #endif

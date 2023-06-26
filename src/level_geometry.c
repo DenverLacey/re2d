@@ -78,6 +78,21 @@ Level_Geometry level_geometry_make(size_t num_joints, Geometry_Joint *joints) {
     };
 }
 
+void level_geometry_register_doors(Level_Geometry *level, size_t num_doors, Geometry_Door *doors) {
+    level->num_doors = num_doors;
+    level->doors = doors;
+
+    int num_joints = (int)level->num_joints;
+
+    #ifdef DEBUG
+        for (size_t i = 0; i < num_doors; ++i) {
+            Geometry_Door d = doors[i];
+            if (d.left < 0 || d.left >= num_joints) TraceLog(LOG_ERROR, "Door %d refers to non-existant joint %d.", i, d.left);
+            if (d.right < 0 || d.right >= num_joints) TraceLog(LOG_ERROR, "Door %d refers to non-existant joint %d.", i, d.right);
+        }
+    #endif
+}
+
 static Floor_Movement finalize_movement(Vector2 player_position, Floor floor) {
     assert(
         floor.left->position.x <= player_position.x &&
@@ -210,6 +225,8 @@ static void construct_path(Vec_Vector2 *path, Pathfind_Node *last, Vector2 end) 
 
 // // RESEARCH: https://en.wikipedia.org/wiki/A*_search_algorithm
 Vec_Vector2 level_geometry_pathfind(Level_Geometry *level, Vector2 start, Vector2 end) {
+    Vec_Vector2 path = {0};
+
     init_pathfind_nodes(level->pathfinding.num_nodes, level->pathfinding.nodes, end);
 
     Floor starting_floor = level_find_floor(level, start);
@@ -220,6 +237,10 @@ Vec_Vector2 level_geometry_pathfind(Level_Geometry *level, Vector2 start, Vector
 
     Floor ending_floor = level_find_floor(level, end);
     assert(ending_floor.left && ending_floor.right);
+    if (floor_contains_point(starting_floor, end)) {
+        vec_append(&path, end);
+        return path;
+    }
 
     int ending_floor_indexes_left = ending_floor.left - level->joints;
     int ending_floor_indexes_right = ending_floor.right - level->joints;
@@ -234,7 +255,6 @@ Vec_Vector2 level_geometry_pathfind(Level_Geometry *level, Vector2 start, Vector
         &level->pathfinding.nodes[ending_floor_indexes_right],
     };
     
-    Vec_Vector2 path = {0};
     Vec_Pathfind_Node_Ptr open_set = {0};
 
     start_nodes[0]->g_score = Vector2Distance(start, level->joints[starting_floor_indexes_left].position);
@@ -272,6 +292,44 @@ Vec_Vector2 level_geometry_pathfind(Level_Geometry *level, Vector2 start, Vector
     return path;
 }
 
+Vector2 level_geometry_random_position(Level_Geometry *level) {
+    // @TODO: This is a really dumb algorithm that should be replaced with
+    // something more sophisticated.
+    // @BUGS:
+    //     - Can choose points that are half way down a fall connection. 
+    //
+
+    int attempts_remaining = level->num_joints * 10;
+    Vector2 destination = {0};
+
+    do {
+        int other_joint_idx = -1;
+        Geometry_Joint *joint = NULL;
+
+        while (other_joint_idx == -1 && attempts_remaining > 0) {
+            int joint_idx = rand() % level->num_joints;
+            joint = &level->joints[joint_idx];
+
+            int other_joint_attempts_remaining = JOINT_ALL_CONN_COUNT * 10;
+            while (other_joint_idx == -1 && other_joint_attempts_remaining > 0) {
+                other_joint_idx = joint->all_connections[rand() % JOINT_ALL_CONN_COUNT];
+                --other_joint_attempts_remaining;
+            }
+        }
+
+        if (other_joint_idx == -1 || !joint) return (Vector2){0};
+
+        Geometry_Joint *other_joint = &level->joints[other_joint_idx];
+
+        float t = (float)rand() / (float)RAND_MAX;
+        
+        destination = lerpv(joint->position, other_joint->position, t);
+        --attempts_remaining;
+    } while (attempts_remaining > 0);
+
+    return destination;
+}
+
 Floor floor_make(Geometry_Joint *a, Geometry_Joint *b) {
     Geometry_Joint *left, *right;
     if (a->position.x <= b->position.x) {
@@ -299,11 +357,11 @@ bool floor_contains_point(Floor floor, Vector2 point) {
         Vector2 expected_gradiant = Vector2Normalize(
             Vector2Subtract(floor.right->position, floor.left->position)
         );
-        Vector2 actual_grandiant = Vector2Normalize(
+        Vector2 actual_gradiant = Vector2Normalize(
             Vector2Subtract(point, floor.left->position)
         );
 
-        if (!Vector2Equals(actual_grandiant, expected_gradiant)) return false;
+        if (!Vector2Equals(actual_gradiant, expected_gradiant)) return false;
     }
 
     return true;
@@ -331,6 +389,29 @@ Floor level_find_floor(Level_Geometry *level, Vector2 position) {
     }
 
     return (Floor){0};
+}
+
+void level_geometry_open_door(Level_Geometry *level, Geometry_Door door) {
+    level->joints[door.left].connections[JOINT_RIGHT].straight = door.right;
+    level->joints[door.right].connections[JOINT_LEFT].straight = door.left;
+}
+
+void level_geometry_close_door(Level_Geometry *level, Geometry_Door door) {
+    level->joints[door.left].connections[JOINT_RIGHT].straight = -1;
+    level->joints[door.right].connections[JOINT_LEFT].straight = -1;
+}
+
+void level_geometry_toggle_door(Level_Geometry *level, Geometry_Door door, bool open) {
+    if (open) {
+        level_geometry_open_door(level, door);
+    } else {
+        level_geometry_close_door(level, door);
+    }
+}
+
+bool level_geometry_is_door_open(Level_Geometry *level, Geometry_Door door) {
+    return level->joints[door.left].connections[JOINT_RIGHT].straight != -1 &&
+           level->joints[door.right].connections[JOINT_LEFT].straight != -1;
 }
 
 #ifdef DEBUG

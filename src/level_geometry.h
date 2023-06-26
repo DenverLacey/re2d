@@ -70,10 +70,17 @@ typedef struct {
 } Pathfinding;
 
 typedef struct {
+    int left;
+    int right;
+} Geometry_Door;
+
+typedef struct {
     Vector2 min_extents;
     Vector2 max_extents;
     size_t num_joints;
     Geometry_Joint *joints;
+    size_t num_doors;
+    Geometry_Door *doors;
     Pathfinding pathfinding;
 } Level_Geometry;
 
@@ -83,16 +90,23 @@ typedef struct {
     Floor new_floor;
 } Floor_Movement;
 
-bool pathfind_node_is_neighbours_with(Pathfind_Node *node, Pathfind_Node *neighbours);
+bool pathfind_node_is_neighbours_with(Pathfind_Node *node, Pathfind_Node *neighbour);
 
 Level_Geometry level_geometry_make(size_t num_joints, Geometry_Joint *joints);
+void level_geometry_register_doors(Level_Geometry *level, size_t num_doors, Geometry_Door *doors);
 Floor_Movement calculate_floor_movement(Level_Geometry *level, Vector2 player_position, Floor player_current_floor, Vector2 player_movement);
 Vec_Vector2 level_geometry_pathfind(Level_Geometry *level, Vector2 start, Vector2 end);
+Vector2 level_geometry_random_position(Level_Geometry *level);
 
 Floor floor_make(Geometry_Joint *a, Geometry_Joint *b);
 bool floor_is_flat(Floor floor);
 bool floor_contains_point(Floor floor, Vector2 point);
 Floor level_find_floor(Level_Geometry *level, Vector2 position);
+
+void level_geometry_open_door(Level_Geometry *level, Geometry_Door door);
+void level_geometry_close_door(Level_Geometry *level, Geometry_Door door);
+void level_geometry_toggle_door(Level_Geometry *level, Geometry_Door door, bool open);
+bool level_geometry_is_door_open(Level_Geometry *level, Geometry_Door door);
 
 #ifdef DEBUG
 void level_geometry_draw_gizmos(Level_Geometry *level, Drawer *drawer);
