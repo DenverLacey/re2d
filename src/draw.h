@@ -1,6 +1,8 @@
 #ifndef DRAW_H_
 #define DRAW_H_
 
+#include <stddef.h>
+
 #include "raylib.h"
 
 #include "vec.h"
@@ -66,7 +68,13 @@ DEFINE_VEC_FOR_TYPE(Draw_Action);
 
 typedef struct {
     Vec_Draw_Action layers[Draw_Layer_COUNT];
+    char *text_buffer;
+    char *text_buffer_end;
+    char *text_buffer_write;
 } Drawer;
+
+Drawer drawer_make(size_t text_buffer_size);
+void drawer_free(Drawer *drawer);
 
 void draw_rectangle(Drawer *drawer, Draw_Layer layer, Rectangle rect, Color color);
 void draw_rectangle_outline(Drawer *drawer, Draw_Layer layer, Rectangle rect, float thickness, Color color);

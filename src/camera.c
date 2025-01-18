@@ -1,7 +1,5 @@
 #include "camera.h"
 
-#include <stdio.h>
-
 #include "raymath.h"
 
 #define FLOAT_EQL_THRESHOLD 0.001f
@@ -50,3 +48,4 @@ void player_camera_update(
     if (min.x > 0) camera->offset.x = WINDOW_WIDTH / 2 - min.x;
     if (min.y > 0) camera->offset.y = WINDOW_HEIGHT / 2 - min.y;
 }
+

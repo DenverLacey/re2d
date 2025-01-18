@@ -89,8 +89,7 @@ void cursor_draw(Vector2 position, Color color, Drawer *drawer) {
 }
 
 int main(int argc, const char **argv) {
-    UNUSED(argc);
-    UNUSED(argv);
+    UNUSED(argc, argv);
 
     srand(time(NULL));
 
@@ -101,7 +100,6 @@ int main(int argc, const char **argv) {
     #endif
 
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "The Game");
-
     SetTargetFPS(120);
 
     Geometry_Joint joints[] = {
@@ -118,7 +116,8 @@ int main(int argc, const char **argv) {
                     .up = -1,
                     .straight = 1,
                     .down = -1,
-                    .fall = -1
+                    .fall = -1,
+                    .locked.straight = true,
                 }
             }
         },
@@ -129,13 +128,13 @@ int main(int argc, const char **argv) {
                     .up = -1,
                     .straight = 0,
                     .down = -1,
-                    .fall = -1
+                    .fall = -1,
                 },
                 [JOINT_RIGHT] = {
                     .up = -1,
                     .straight = 2,
                     .down = 4,
-                    .fall = -1
+                    .fall = -1,
                 }
             }
         },
@@ -220,12 +219,12 @@ int main(int argc, const char **argv) {
                     .up = -1,
                     .straight = 7,
                     .down = -1,
-                    .fall = -1
+                    .fall = -1,
                 }
             }
         },
         [7] = {
-            .position = vec2(2000.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
+            .position = vec2(1875.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
             .connections = {
                 [JOINT_LEFT] = {
                     .up = -1,
@@ -235,18 +234,19 @@ int main(int argc, const char **argv) {
                 },
                 [JOINT_RIGHT] = {
                     .up = -1,
-                    .straight = -1,
+                    .straight = 8,
                     .down = -1,
-                    .fall = -1
+                    .fall = -1,
+                    .locked.straight = true,
                 }
             }
         },
         [8] = {
-            .position = vec2(2020.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
+            .position = vec2(2000.f, (WINDOW_HEIGHT / 2 + PLAYER_HEIGHT / 2) + 300),
             .connections = {
                 [JOINT_LEFT] = {
                     .up = -1,
-                    .straight = -1,
+                    .straight = 7,
                     .down = -1,
                     .fall = -1
                 },
@@ -257,15 +257,10 @@ int main(int argc, const char **argv) {
                     .fall = -1
                 }
             }
-        }
-    };
-
-    Geometry_Door doors[] = {
-        { .left = 7, .right = 8 }
+        },
     };
 
     Level_Geometry level_geometry = level_geometry_make(sizeof(joints) / sizeof(joints[0]), joints);
-    level_geometry_register_doors(&level_geometry, sizeof(doors) / sizeof(doors[0]), doors);
 
     Level_Object_Interactable interactables[] = {
         {
@@ -325,13 +320,13 @@ int main(int argc, const char **argv) {
     player_camera.zoom = CAMERA_NORMAL_ZOOM;
 
     Vec_Enemy enemies = {0};
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 0; ++i) {
         Vector2 start_position = level_geometry_random_position(&level_geometry);
         Enemy e = enemy_spawn(start_position);
         vec_append(&enemies, e);
     }
 
-    Input input;
+    Input input = {0};
 
     HideCursor();
 
@@ -342,7 +337,10 @@ int main(int argc, const char **argv) {
     const Color background_color = BLACK;
 #endif
 
-    Drawer drawer = {0};
+    Drawer drawer = drawer_make(1024);
+    #ifdef DEBUG
+        debug_drawer = drawer_make(1024);
+    #endif
 
     while (!WindowShouldClose()) {
         ClearBackground(background_color);
@@ -359,7 +357,8 @@ int main(int argc, const char **argv) {
         player_poll_input(&input);
 
         if (IsKeyPressed(KEY_O)) {
-            level_geometry_toggle_door(&level_geometry, doors[0], !level_geometry_is_door_open(&level_geometry, doors[0]));
+            bool is_locked = level_geometry.joints[7].connections[JOINT_RIGHT].locked.straight;
+            level_geometry.joints[7].connections[JOINT_RIGHT].locked.straight = !is_locked;
         }
 
         // Update =============================================================
@@ -425,6 +424,11 @@ int main(int argc, const char **argv) {
         }
         EndDrawing();
     }
+
+    drawer_free(&drawer);
+    #ifdef DEBUG
+        drawer_free(&debug_drawer);
+    #endif
 
     ShowCursor();
 

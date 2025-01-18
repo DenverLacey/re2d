@@ -1,6 +1,31 @@
 #include "draw.h"
 
+#include "raylib.h"
 #include "utils.h"
+
+Drawer drawer_make(size_t text_buffer_size) {
+    char *text_buffer = malloc(text_buffer_size * sizeof(char));
+    char *text_buffer_end = text_buffer + text_buffer_size;
+    return (Drawer) {
+        .text_buffer = text_buffer,
+        .text_buffer_end = text_buffer_end,
+        .text_buffer_write = text_buffer,
+    };
+}
+
+void drawer_free(Drawer *drawer) {
+    vec_free(drawer->layers);
+    free(drawer->text_buffer);
+}
+
+static char *draw_internal_reserve_string(Drawer *drawer, size_t n) {
+    if (drawer->text_buffer_write + n >= drawer->text_buffer_end) {
+        return NULL;
+    }
+    char *p = drawer->text_buffer_write;
+    drawer->text_buffer_write += n;
+    return p;
+}
 
 void draw_rectangle(Drawer *drawer, Draw_Layer layer, Rectangle rect, Color color) {
     Draw_Action action = {
@@ -60,7 +85,12 @@ void draw_line(Drawer *drawer, Draw_Layer layer, Vector2 start, Vector2 end, flo
 
 void draw_text(Drawer *drawer, Draw_Layer layer, const char *text, Vector2 position, float font_size, Color color) {
     size_t text_len = strlen(text);
-    char *copied = malloc(text_len + 1);
+    char *copied = draw_internal_reserve_string(drawer, text_len + 1);
+    if (!copied) {
+        TraceLog(LOG_WARNING, "Ran out of space in drawer's text buffer.");
+        return;
+    }
+
     strcpy(copied, text);
 
     Draw_Action action = {
@@ -121,8 +151,6 @@ void draw_layer(Drawer *drawer, Draw_Layer layer) {
                     action->text_info.font_size,
                     action->text_info.color
                 );
-
-                free(action->text_info.text);
             } break;
             case Draw_Action_COUNT: UNREACHABLE;
         }
@@ -140,6 +168,7 @@ void clear_layers(Drawer *drawer) {
         Vec_Draw_Action *action_vec = &drawer->layers[layer];
         vec_clear(action_vec);
     }
+    drawer->text_buffer_write = drawer->text_buffer;
 }
 
 void draw_internal_add_draw_action(Drawer *drawer, Draw_Action action) {

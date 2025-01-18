@@ -47,7 +47,7 @@ void player_update_movement(Player *player, Input *input, Level_Geometry *level)
             player->current_floor = player->falling_floor;
         }
     } else {
-        player->velocity = lerp(player->velocity, input->player_movement.x, PLAYER_ACCELERATION * 0.001f);
+        player->velocity = lerp(player->velocity, input->player_movement.x, PLAYER_ACCELERATION * input->delta_time);
         player->position.x += player->velocity * PLAYER_SPEED * input->delta_time;
 
         Floor_Movement movement = calculate_floor_movement(
@@ -60,6 +60,7 @@ void player_update_movement(Player *player, Input *input, Level_Geometry *level)
         if (movement.falling) {
             set_flags(&player->flags, Player_Flags_FALLING);
             player->position.x = movement.desired_position.x;
+            player->velocity = 0.f;
             player->falling_position = movement.desired_position;
             player->falling_floor = movement.new_floor;
             player->start_falling_time = GetTime();
@@ -138,14 +139,14 @@ void player_update_aiming(
 }
 
 void player_draw(Player *player, Drawer *drawer) {
-    Vector2 position = player->position;
+    Vector2 p = player->position;
 
     draw_rectangle(
         drawer,
         Draw_Layer_PLAYER,
         (Rectangle){
-            .x = position.x - PLAYER_WIDTH / 2.f,
-            .y = position.y - PLAYER_HEIGHT,
+            .x = p.x - PLAYER_WIDTH / 2.f,
+            .y = p.y - PLAYER_HEIGHT,
             .width = PLAYER_WIDTH,
             .height = PLAYER_HEIGHT
         },
@@ -153,6 +154,7 @@ void player_draw(Player *player, Drawer *drawer) {
     );
 
     #ifdef DEBUG
-        draw_circle(drawer, Draw_Layer_PLAYER, position, 2.f, LIME);
+        draw_circle(drawer, Draw_Layer_PLAYER, p, 2.f, LIME);
     #endif
 }
+

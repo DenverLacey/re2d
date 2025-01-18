@@ -4,10 +4,10 @@
 #include <math.h>
 #include <assert.h>
 
+#include "raylib.h"
 #include "raymath.h"
 
 #include "draw.h"
-#include "collisions.h"
 #include "utils.h"
 
 bool pathfind_node_is_neighbours_with(Pathfind_Node *node, Pathfind_Node *neighbour) {
@@ -78,21 +78,6 @@ Level_Geometry level_geometry_make(size_t num_joints, Geometry_Joint *joints) {
     };
 }
 
-void level_geometry_register_doors(Level_Geometry *level, size_t num_doors, Geometry_Door *doors) {
-    level->num_doors = num_doors;
-    level->doors = doors;
-
-    int num_joints = (int)level->num_joints;
-
-    #ifdef DEBUG
-        for (size_t i = 0; i < num_doors; ++i) {
-            Geometry_Door d = doors[i];
-            if (d.left < 0 || d.left >= num_joints) TraceLog(LOG_ERROR, "Door %d refers to non-existant joint %d.", i, d.left);
-            if (d.right < 0 || d.right >= num_joints) TraceLog(LOG_ERROR, "Door %d refers to non-existant joint %d.", i, d.right);
-        }
-    #endif
-}
-
 static Floor_Movement finalize_movement(Vector2 player_position, Floor floor) {
     assert(
         floor.left->position.x <= player_position.x &&
@@ -142,20 +127,25 @@ Floor_Movement calculate_floor_movement(
         connections = &joint->connections[JOINT_RIGHT];
     }
 
-    int conn_idx = -1;
+    Connection_Index conn_idx = -1;
+    int conn_joint_idx = -1;
     if (player_movement.y < 0.f) {
-        conn_idx = connections->up;
+        conn_idx = CONN_UP;
+        conn_joint_idx = connections->up;
     } else if (player_movement.y > 0.f) {
-        conn_idx = connections->down;
+        conn_idx = CONN_DOWN;
+        conn_joint_idx = connections->down;
     }
 
-    if (conn_idx == -1) {
-        conn_idx = connections->straight;
+    if (conn_joint_idx == -1) {
+        conn_idx = CONN_STRAIGHT;
+        conn_joint_idx = connections->straight;
     }
 
-    if (conn_idx == -1 && connections->fall != -1 && player_movement.y > 0.f) {
-        conn_idx = connections->fall;
-        Geometry_Joint *conn = &level->joints[conn_idx];
+    if (conn_joint_idx == -1 && connections->fall != -1 && !connections->locked.fall && player_movement.y > 0.f) {
+        conn_idx = CONN_FALL;
+        conn_joint_idx = connections->fall;
+        Geometry_Joint *conn = &level->joints[conn_joint_idx];
         Geometry_Joint *other = 
             conn->connections[JOINT_LEFT].straight != -1 ? &level->joints[conn->connections[JOINT_LEFT].straight] :
             conn->connections[JOINT_RIGHT].straight != -1 ? &level->joints[conn->connections[JOINT_RIGHT].straight] :
@@ -171,7 +161,7 @@ Floor_Movement calculate_floor_movement(
         };
     }
 
-    if (conn_idx == -1) {
+    if (conn_joint_idx == -1 || connections->locked.connections[conn_idx]) {
         return (Floor_Movement){
             .falling = false,
             .desired_position = joint->position,
@@ -179,7 +169,7 @@ Floor_Movement calculate_floor_movement(
         };
     }
 
-    Geometry_Joint *conn = &level->joints[conn_idx];
+    Geometry_Joint *conn = &level->joints[conn_joint_idx];
     Floor new_floor = floor_make(joint, conn);
     return finalize_movement(player_position, new_floor);
 }
@@ -293,9 +283,9 @@ Vec_Vector2 level_geometry_pathfind(Level_Geometry *level, Vector2 start, Vector
 }
 
 Vector2 level_geometry_random_position(Level_Geometry *level) {
-    // @TODO: This is a really dumb algorithm that should be replaced with
+    // TODO: This is a really dumb algorithm that should be replaced with
     // something more sophisticated.
-    // @BUGS:
+    // BUGS:
     //     - Can choose points that are half way down a fall connection. 
     //
 
@@ -391,6 +381,7 @@ Floor level_find_floor(Level_Geometry *level, Vector2 position) {
     return (Floor){0};
 }
 
+#if 0
 void level_geometry_open_door(Level_Geometry *level, Geometry_Door door) {
     level->joints[door.left].connections[JOINT_RIGHT].straight = door.right;
     level->joints[door.right].connections[JOINT_LEFT].straight = door.left;
@@ -413,6 +404,7 @@ bool level_geometry_is_door_open(Level_Geometry *level, Geometry_Door door) {
     return level->joints[door.left].connections[JOINT_RIGHT].straight != -1 &&
            level->joints[door.right].connections[JOINT_LEFT].straight != -1;
 }
+#endif
 
 #ifdef DEBUG
 

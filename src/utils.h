@@ -39,7 +39,15 @@ DEFINE_VEC_FOR_TYPE(Vector2);
     }                                                                          \
 } while (0)
 
-#define UNUSED(_x) ((void)_x)
+#ifdef __GNUC__
+#define UNUSED(...) \
+    _Pragma("clang diagnostic push")                                           \
+    _Pragma("clang diagnostic ignored \"-Wunused-value\"")                     \
+    ((void)(__VA_ARGS__))                                                      \
+    _Pragma("clang diagnostic pop")
+#else
+#define UNUSED(...) ((void)(__VA_ARGS__))
+#endif
 
 #define DO_STRINGIFY(__x) #__x
 #define STRINGIFY(__x) DO_STRINGIFY(__x)

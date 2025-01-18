@@ -10,7 +10,7 @@ Enemy enemy_spawn(Vector2 position) {
     return (Enemy){
         .position = position,
         .health = ENEMY_START_HEALTH,
-        .damage_recieve_time = -INFINITY,
+        .damage_receive_time = -INFINITY,
         .target = -1,
         .reached_destination_time = -INFINITY
     };
@@ -52,7 +52,7 @@ void enemy_update(Enemy *enemy, Level_Geometry *level, float delta) {
 
     Vector2 dir = Vector2Normalize(Vector2Subtract(target, enemy->position));
 
-    float speed = fminf(1.0f, ilerp(now - enemy->damage_recieve_time, 0.f, ENEMY_STUN_TIME_SECS));
+    float speed = fminf(1.0f, ilerp(now - enemy->damage_receive_time, 0.f, ENEMY_STUN_TIME_SECS));
     speed *= ENEMY_SPEED;
 
     enemy->position = Vector2Add(enemy->position, Vector2Scale(dir, speed * delta));
@@ -80,7 +80,7 @@ void enemy_draw(Enemy *enemy, Drawer *drawer) {
     };
 
     Color color =
-        GetTime() - enemy->damage_recieve_time <= ENEMY_SHOW_DAMAGE_TIME_SECS
+        GetTime() - enemy->damage_receive_time <= ENEMY_SHOW_DAMAGE_TIME_SECS
         ? ENEMY_DAMAGE_COLOR
         : ENEMY_COLOR;
 
@@ -127,14 +127,14 @@ Vector2 enemy_choose_random_destination(Vector2 enemy_position, Level_Geometry *
 
     do {
         destination = level_geometry_random_position(level);
-    } while (attempts_remaining > 0 && Vector2DistanceSqr(destination, enemy_position) < 5.f);
+    } while (--attempts_remaining > 0 && Vector2DistanceSqr(destination, enemy_position) < 5.f);
 
     return destination;
 }
 
 void enemy_damage(Enemy *enemy, float damage) {
     enemy->health -= damage;
-    enemy->damage_recieve_time = GetTime();
+    enemy->damage_receive_time = GetTime();
 }
 
 void enemy_free(Enemy *enemy) {
@@ -163,3 +163,4 @@ void enemy_draw_path(Enemy *enemy, Drawer *drawer) {
     }
 }
 #endif
+

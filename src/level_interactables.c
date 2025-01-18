@@ -44,7 +44,7 @@ static void draw_item_name(Interactable *item, Vector2 item_position, Drawer *dr
         case Interactable_Kind_AMMO: {
             Ammo_Kind kind = item->specific_kind;
             const char *kind_strs[] = { "HG" };
-            snprintf(item_name, sizeof(item_name), "Ammo (%s) x%d", kind_strs[kind], item->amount);
+            snprintf(item_name, sizeof(item_name), "Ammo (%s) x %d", kind_strs[kind], item->amount);
         } break;
         case Interactable_Kind_DOCUMENT: {
             const Interactable_Info_Document *info = &DOCUMENT_INFOS[item->info_index];

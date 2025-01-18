@@ -27,7 +27,7 @@ typedef struct {
 
     // Combat State
     float health;
-    double damage_recieve_time;
+    double damage_receive_time;
 } Enemy;
 
 DEFINE_VEC_FOR_TYPE(Enemy);
