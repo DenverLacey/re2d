@@ -1,7 +1,7 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-#include "raylib.h"
+#include <raylib.h>
 #include "vec.h"
 
 #define WINDOW_WIDTH 1280
@@ -31,6 +31,7 @@ DEFINE_VEC_FOR_TYPE(Vector2);
 #define is_flags_set(_in, _fl) (((_in) & (_fl)) == (_fl))
 #define set_flags(_in, _fl) (*(_in) |= (_fl))
 #define unset_flags(_in, _fl) (*(_in) &= ~(_fl))
+#define toggle_flags(_in, _fl) (*(_in) ^= (_fl))
 #define set_flags_if(_in, _cond, _fl) do {                                     \
     if (_cond) {                                                               \
         set_flags(_in, _fl);                                                   \

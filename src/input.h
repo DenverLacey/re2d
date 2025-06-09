@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "raylib.h"
+#include <raylib.h>
 
 typedef enum {
     Input_Flags_AIMING = 0x1,

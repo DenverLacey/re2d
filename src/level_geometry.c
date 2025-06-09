@@ -4,8 +4,8 @@
 #include <math.h>
 #include <assert.h>
 
-#include "raylib.h"
-#include "raymath.h"
+#include <raylib.h>
+#include <raymath.h>
 
 #include "draw.h"
 #include "utils.h"
@@ -36,12 +36,14 @@ static Pathfinding pathfinding_make(size_t num_joints, Geometry_Joint *joints) {
         Geometry_Joint *j = &joints[i];
         Pathfind_Node *n = &nodes.items[i];
 
-        for (size_t ci = 0; ci < JOINT_COUNT * 2; ++ci) {
-            int neighbour_idx = j->all_connections[ci];
-            if (neighbour_idx == -1) continue;
+        for (size_t ci = 0; ci < JOINT_COUNT; ++ci) {
+            for (size_t cj = 0; cj < CONN_COUNT; ++cj) {
+                int neighbour_idx = j->connections[ci].connections[cj];
+                if (neighbour_idx == -1) continue;
 
-            Pathfind_Node *neighbour = &nodes.items[neighbour_idx];
-            pathfind_node_connect(n, neighbour);
+                Pathfind_Node *neighbour = &nodes.items[neighbour_idx];
+                pathfind_node_connect(n, neighbour);
+            }
         }
     }
 
@@ -302,7 +304,8 @@ Vector2 level_geometry_random_position(Level_Geometry *level) {
 
             int other_joint_attempts_remaining = JOINT_ALL_CONN_COUNT * 10;
             while (other_joint_idx == -1 && other_joint_attempts_remaining > 0) {
-                other_joint_idx = joint->all_connections[rand() % JOINT_ALL_CONN_COUNT];
+                int chosen_conn = rand() % JOINT_ALL_CONN_COUNT;
+                other_joint_idx = joint->connections[chosen_conn % 2].connections[chosen_conn / 2];
                 --other_joint_attempts_remaining;
             }
         }
@@ -365,15 +368,18 @@ Floor level_find_floor(Level_Geometry *level, Vector2 position) {
     Geometry_Joint *joints = level->joints;
     for (int i = 0; i < num_joints; ++i) {
         Geometry_Joint *a = &joints[i];
-        for (int j = 0; j < CONN_COUNT * JOINT_COUNT; ++j) {
-            int b_idx = a->all_connections[j];
-            if (b_idx == -1) continue;
+        for (int j = 0; j < JOINT_COUNT; ++j) {
+            for (int k = 0; k < CONN_COUNT; ++k) {
+                int b_idx = a->connections[j].connections[k];
+                if (b_idx == -1) continue;
 
-            Geometry_Joint *b = &joints[b_idx];
-            Floor floor = floor_make(a, b);
-            
-            if (floor_contains_point(floor, position)) {
-                return floor;
+                assert(b_idx < num_joints);
+                Geometry_Joint *b = &joints[b_idx];
+                Floor floor = floor_make(a, b);
+
+                if (floor_contains_point(floor, position)) {
+                    return floor;
+                }
             }
         }
     }

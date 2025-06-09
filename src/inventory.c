@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stddef.h>
 
-#include "raylib.h"
+#include <raylib.h>
 
 const Item ITEMS[Item_Kind_COUNT] = {
     [Item_Kind_FOOD] = {

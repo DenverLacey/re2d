@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "raylib.h"
+#include <raylib.h>
 
 #include "level_geometry.h"
 

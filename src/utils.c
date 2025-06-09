@@ -1,6 +1,6 @@
 #include "utils.h"
 
-#include "math.h"
+#include <math.h>
 
 Vector2 vec2(float x, float y) {
     return (Vector2){ .x = x, .y = y };

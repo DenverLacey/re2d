@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-#include "raymath.h"
+#include <raymath.h>
 
 #define PATH_TARGET_COMPLETION_THRESHOLD 0.75f
 

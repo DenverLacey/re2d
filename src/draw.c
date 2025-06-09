@@ -1,6 +1,6 @@
 #include "draw.h"
 
-#include "raylib.h"
+#include <raylib.h>
 #include "utils.h"
 
 Drawer drawer_make(size_t text_buffer_size) {

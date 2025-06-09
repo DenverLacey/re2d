@@ -2,8 +2,8 @@
 #include <stdbool.h>
 #include <time.h>
 
-#include "raylib.h"
-#include "raymath.h"
+#include <raylib.h>
+#include <raymath.h>
 
 #include "camera.h"
 #include "draw.h"
@@ -99,8 +99,9 @@ int main(int argc, const char **argv) {
         SetTraceLogLevel(LOG_ERROR);
     #endif
 
+    SetConfigFlags(FLAG_VSYNC_HINT);
     InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "The Game");
-    SetTargetFPS(120);
+    // SetTargetFPS(120);
 
     Geometry_Joint joints[] = {
         [0] = {
@@ -117,7 +118,6 @@ int main(int argc, const char **argv) {
                     .straight = 1,
                     .down = -1,
                     .fall = -1,
-                    .locked.straight = true,
                 }
             }
         },
@@ -319,8 +319,9 @@ int main(int argc, const char **argv) {
     player_camera.offset.y = WINDOW_HEIGHT / 2;
     player_camera.zoom = CAMERA_NORMAL_ZOOM;
 
+
     Vec_Enemy enemies = {0};
-    for (int i = 0; i < 0; ++i) {
+    for (int i = 0; i < 3; ++i) {
         Vector2 start_position = level_geometry_random_position(&level_geometry);
         Enemy e = enemy_spawn(start_position);
         vec_append(&enemies, e);

@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "raymath.h"
+#include <raymath.h>
 
 #include "draw.h"
 #include "collisions.h"

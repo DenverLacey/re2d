@@ -2,7 +2,7 @@
 
 #include <assert.h>
 
-#include "raymath.h"
+#include <raymath.h>
 
 #include "input.h"
 #include "level_geometry.h"
@@ -14,11 +14,7 @@ void player_poll_input(Input *input) {
     set_flags_if(&input->flags, IsKeyDown(KEY_LEFT_CONTROL) || IsMouseButtonDown(MOUSE_BUTTON_RIGHT), Input_Flags_AIMING);
 
     if (IsKeyPressed(KEY_I)) {
-        if (is_flags_set(input->flags, Input_Flags_INVENTORY_OPEN)) {
-            unset_flags(&input->flags, Input_Flags_INVENTORY_OPEN);
-        } else {
-            set_flags(&input->flags, Input_Flags_INVENTORY_OPEN);
-        }
+        toggle_flags(&input->flags, Input_Flags_INVENTORY_OPEN);
     }
 
     if (!is_flags_set(input->flags, Input_Flags_AIMING) &&

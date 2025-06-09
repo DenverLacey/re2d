@@ -1,6 +1,6 @@
 #include "camera.h"
 
-#include "raymath.h"
+#include <raymath.h>
 
 #define FLOAT_EQL_THRESHOLD 0.001f
 

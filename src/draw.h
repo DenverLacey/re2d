@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "raylib.h"
+#include <raylib.h>
 
 #include "vec.h"
 

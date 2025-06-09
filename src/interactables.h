@@ -1,7 +1,7 @@
 #ifndef INTERACTABLES_H_
 #define INTERACTABLES_H_
 
-#include "raylib.h"
+#include <raylib.h>
 
 typedef enum {
     Interactable_Kind_AMMO,

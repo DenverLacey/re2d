@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 
-#include "raylib.h"
+#include <raylib.h>
 
 #include "draw.h"
 #include "view.h"
@@ -28,11 +28,11 @@ typedef struct {
         };
         int connections[CONN_COUNT];
     };
-    // NOTE: This means that it'll be locked from only one side
+    // NOTE: This means that it'll be locked from only one side.
     //       If this isn't good enough, then we'd either have to
     //       make sure that the two connections are kept in sync
     //       with each other, or move the locked information to
-    //       the joint
+    //       the joint.
     union Locked_Info {
         struct {
             bool up;
@@ -55,7 +55,6 @@ typedef struct {
     Vector2 position;
     union {
         Connections connections[JOINT_COUNT];
-        int all_connections[JOINT_ALL_CONN_COUNT];
     };
 } Geometry_Joint;
 

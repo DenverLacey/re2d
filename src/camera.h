@@ -1,7 +1,7 @@
 #ifndef CAMERA_H_
 #define CAMERA_H_
 
-#include "raylib.h"
+#include <raylib.h>
 #include "input.h"
 #include "utils.h"
 

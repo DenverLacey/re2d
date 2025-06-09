@@ -1,7 +1,7 @@
 #ifndef PLAYER_H_
 #define PLAYER_H_
 
-#include "raylib.h"
+#include <raylib.h>
 
 #include "draw.h"
 #include "enemy.h"
